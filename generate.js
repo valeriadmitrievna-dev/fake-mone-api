@@ -122,6 +122,15 @@ const cards = data.cards.map((card) => {
   };
 });
 
+const secret = {
+  worktime: {
+    start: new Date("2000-01-01T08:00:00"),
+    end: new Date("2000-01-01T17:00:00"),
+  },
+  logo: faker.image.abstract(),
+  company: faker.company.name(),
+};
+
 module.exports = function () {
   return {
     clients,
@@ -131,5 +140,6 @@ module.exports = function () {
     client,
     master,
     service,
+    secret
   };
 };
