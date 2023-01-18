@@ -60,10 +60,28 @@ const masters = _.times(40, (n) => {
     lastname: faker.name.lastName(),
     avatar: faker.image.avatar(),
     purpose: faker.helpers.arrayElement(purposes),
+  };
+});
+
+const master = _.times(40, (n) => {
+  return {
+    id: faker.datatype.uuid(),
+    firstname: faker.name.firstName(),
+    lastname: faker.name.lastName(),
+    avatar: faker.image.avatar(),
+    purpose: faker.helpers.arrayElement(purposes),
     phrase: faker.lorem.words(random(2, 7)),
     about: _.times(random(2, 5), () => faker.lorem.words(random(4, 16))),
     bests: _.times(random(0, 5), () => faker.lorem.words(random(4, 16))),
     reviews: _.times(random(0, 5), () => faker.lorem.paragraph()),
+  };
+});
+
+const service = _.times(40, () => {
+  return {
+    id: faker.datatype.uuid(),
+    title: faker.lorem.words(random(1, 3)),
+    duration: faker.helpers.arrayElement(durations),
   };
 });
 
@@ -111,5 +129,7 @@ module.exports = function () {
     services,
     cards,
     client,
+    master,
+    service,
   };
 };
