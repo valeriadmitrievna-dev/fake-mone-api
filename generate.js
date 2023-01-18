@@ -26,6 +26,16 @@ const toSameDate = (toDate, date) =>
   );
 
 const clients = _.times(100, (n) => {
+  return {
+    id: faker.datatype.uuid(),
+    avatar: faker.image.avatar(),
+    phone: faker.phone.number("+# (###) ###-##-##"),
+    firstname: faker.name.firstName(),
+    lastname: faker.name.lastName(),
+  };
+});
+
+const client = _.times(100, (n) => {
   const cardNumbers = faker.random.numeric(4);
   const cardAlphas = faker.random.alpha(2).toUpperCase();
   const card = cardNumbers + "/" + cardAlphas;
@@ -99,6 +109,7 @@ module.exports = function () {
     clients,
     masters,
     services,
-    cards
+    cards,
+    client,
   };
 };
