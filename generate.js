@@ -28,8 +28,8 @@ const toSameDate = (toDate, date) =>
 const clients = _.times(100, (n) => {
   return {
     id: faker.datatype.uuid(),
-    avatar: faker.image.avatar(),
-    phone: faker.phone.number("+# (###) ###-##-##"),
+    avatar: Math.random() > 0.5 ? faker.image.avatar() : null,
+    phone: faker.phone.number("+7 (9##) ###-##-##"),
     firstname: faker.name.firstName(),
     lastname: faker.name.lastName(),
   };
@@ -42,14 +42,13 @@ const client = _.times(100, (n) => {
 
   return {
     id: faker.datatype.uuid(),
-    avatar: faker.image.avatar(),
     age: faker.random.numeric(2),
     registeredAt: faker.date.past(),
-    phone: faker.phone.number("+# (###) ###-##-##"),
+    avatar: Math.random() > 0.5 ? faker.image.avatar() : null,
+    phone: faker.phone.number("+7 (9##) ###-##-##"),
     firstname: faker.name.firstName(),
     lastname: faker.name.lastName(),
     sex: faker.helpers.arrayElement(["М", "Ж"]),
-    card,
   };
 });
 
@@ -58,7 +57,8 @@ const masters = _.times(40, (n) => {
     id: faker.datatype.uuid(),
     firstname: faker.name.firstName(),
     lastname: faker.name.lastName(),
-    avatar: faker.image.avatar(),
+    avatar: Math.random() > 0.5 ? faker.image.avatar() : null,
+    phone: faker.phone.number("+7 (9##) ###-##-##"),
     purpose: faker.helpers.arrayElement(purposes),
   };
 });
@@ -68,7 +68,8 @@ const master = _.times(40, (n) => {
     id: faker.datatype.uuid(),
     firstname: faker.name.firstName(),
     lastname: faker.name.lastName(),
-    avatar: faker.image.avatar(),
+    avatar: Math.random() > 0.5 ? faker.image.avatar() : null,
+    phone: faker.phone.number("+7 (9##) ###-##-##"),
     purpose: faker.helpers.arrayElement(purposes),
     phrase: faker.lorem.words(random(2, 7)),
     about: _.times(random(2, 5), () => faker.lorem.words(random(4, 16))),
@@ -86,15 +87,10 @@ const service = _.times(40, () => {
 });
 
 const services = _.times(40, () => {
-  const codeNumbers = faker.random.numeric(4);
-  const codeAlphas = faker.random.alpha(2).toUpperCase();
-  const code = codeNumbers + "/" + codeAlphas;
-
   return {
     id: faker.datatype.uuid(),
     title: faker.lorem.words(random(1, 3)),
     duration: faker.helpers.arrayElement(durations),
-    code,
     about: _.times(random(2, 5), () => faker.lorem.words(random(4, 16))),
     steps: _.times(random(3, 5), () => faker.lorem.words(random(4, 16))),
     price: faker.commerce.price(300, 20000, 0),
