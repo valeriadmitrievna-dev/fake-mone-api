@@ -36,10 +36,6 @@ const clients = _.times(100, (n) => {
 });
 
 const client = _.times(100, (n) => {
-  const cardNumbers = faker.random.numeric(4);
-  const cardAlphas = faker.random.alpha(2).toUpperCase();
-  const card = cardNumbers + "/" + cardAlphas;
-
   return {
     id: faker.datatype.uuid(),
     age: faker.random.numeric(2),
@@ -58,7 +54,6 @@ const masters = _.times(40, (n) => {
     firstname: faker.name.firstName(),
     lastname: faker.name.lastName(),
     avatar: Math.random() > 0.5 ? faker.image.avatar() : null,
-    phone: faker.phone.number("+7 (9##) ###-##-##"),
     purpose: faker.helpers.arrayElement(purposes),
   };
 });
@@ -69,7 +64,6 @@ const master = _.times(40, (n) => {
     firstname: faker.name.firstName(),
     lastname: faker.name.lastName(),
     avatar: Math.random() > 0.5 ? faker.image.avatar() : null,
-    phone: faker.phone.number("+7 (9##) ###-##-##"),
     purpose: faker.helpers.arrayElement(purposes),
     phrase: faker.lorem.words(random(2, 7)),
     about: _.times(random(2, 5), () => faker.lorem.words(random(4, 16))),
@@ -99,10 +93,10 @@ const services = _.times(40, () => {
   };
 });
 
-const cards = data.cards.map((card) => {
+const cards = data.cards.map((card, index) => {
   const diff = fns.differenceInDays(card.date, data.cards[0].date);
   const client = randomFromArray(clients);
-  const master = randomFromArray(masters);
+  const master = index <= 2 ? masters[0] : randomFromArray(masters);
   const services_15 = services.filter((s) => s.duration === 15);
   const fit_services = services.filter(
     (s) => s.duration === card.service.duration
@@ -136,6 +130,6 @@ module.exports = function () {
     client,
     master,
     service,
-    secret
+    secret,
   };
 };
