@@ -109,6 +109,7 @@ const cards = data.cards.map((card, index) => {
     client,
     master,
     service,
+    id: faker.datatype.uuid(),
   };
 });
 
