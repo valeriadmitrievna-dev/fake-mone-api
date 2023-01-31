@@ -105,7 +105,7 @@ const cards = data.cards.map((card, index) => {
 
   return {
     ...card,
-    date: fns.addDays(toSameDate(card.date, new Date()), diff),
+    date: fns.addDays(toSameDate(new Date(card.date), new Date()), diff),
     client,
     master,
     service,
