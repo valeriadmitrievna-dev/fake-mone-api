@@ -4,7 +4,7 @@ faker.setLocale("ru");
 faker.locale = "ru";
 const fns = require("date-fns");
 
-const data = require("./data");
+const CARDS = require("./data")(fns);
 
 const durations = [15, 30, 45, 60, 90, 120, 150, 180];
 const purposes = [
@@ -17,8 +17,8 @@ const purposes = [
 ];
 
 const CLIENTS = 100;
-const MASTERS = 24
-const SERVICES = 40
+const MASTERS = 24;
+const SERVICES = 40;
 
 const random = (min, max) => Math.floor(Math.random() * (max - min) + min);
 const randomFromArray = (array) =>
@@ -97,8 +97,8 @@ const services = _.times(SERVICES, () => {
   };
 });
 
-const cards = data.cards.map((card, index) => {
-  const diff = fns.differenceInDays(card.date, data.cards[0].date);
+const cards = CARDS.map((card, index) => {
+  const diff = fns.differenceInDays(card.date, CARDS[0].date);
   const client = randomFromArray(clients);
   const master = index <= 2 ? masters[0] : randomFromArray(masters);
   const services_15 = services.filter((s) => s.duration === 15);
@@ -109,7 +109,7 @@ const cards = data.cards.map((card, index) => {
 
   return {
     ...card,
-    date: fns.addDays(toSameDate(new Date(card.date), new Date()), diff),
+    date: toSameDate(new Date(card.date), fns.addDays(new Date(), diff)),
     client,
     master,
     service,
