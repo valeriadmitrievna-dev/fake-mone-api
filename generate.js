@@ -17,7 +17,7 @@ const purposes = [
 ];
 
 const CLIENTS = 100;
-const MASTERS = 24;
+const MASTERS = 12;
 const SERVICES = 40;
 
 const random = (min, max) => Math.floor(Math.random() * (max - min) + min);
@@ -98,7 +98,6 @@ const services = _.times(SERVICES, () => {
 });
 
 const cards = CARDS.map((card, index) => {
-  const diff = fns.differenceInDays(card.date, CARDS[0].date);
   const client = randomFromArray(clients);
   const master = index <= 2 ? masters[0] : randomFromArray(masters);
   const services_15 = services.filter((s) => s.duration === 15);
@@ -109,7 +108,6 @@ const cards = CARDS.map((card, index) => {
 
   return {
     ...card,
-    date: fns.subHours(toSameDate(new Date(card.date), fns.addDays(new Date(), diff)), 3),
     client,
     master,
     service,
