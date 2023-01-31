@@ -16,6 +16,10 @@ const purposes = [
   "Мастер-универсал",
 ];
 
+const CLIENTS = 100;
+const MASTERS = 24
+const SERVICES = 40
+
 const random = (min, max) => Math.floor(Math.random() * (max - min) + min);
 const randomFromArray = (array) =>
   array[Math.floor(Math.random() * array.length)];
@@ -25,7 +29,7 @@ const toSameDate = (toDate, date) =>
     fns.getYear(date)
   );
 
-const clients = _.times(100, (n) => {
+const clients = _.times(CLIENTS, (n) => {
   return {
     id: faker.datatype.uuid(),
     avatar: Math.random() > 0.5 ? faker.image.avatar() : null,
@@ -35,7 +39,7 @@ const clients = _.times(100, (n) => {
   };
 });
 
-const client = _.times(100, (n) => {
+const client = _.times(CLIENTS, (n) => {
   return {
     id: faker.datatype.uuid(),
     age: faker.random.numeric(2),
@@ -48,7 +52,7 @@ const client = _.times(100, (n) => {
   };
 });
 
-const masters = _.times(40, (n) => {
+const masters = _.times(MASTERS, (n) => {
   return {
     id: faker.datatype.uuid(),
     firstname: faker.name.firstName(),
@@ -58,7 +62,7 @@ const masters = _.times(40, (n) => {
   };
 });
 
-const master = _.times(40, (n) => {
+const master = _.times(MASTERS, (n) => {
   return {
     id: faker.datatype.uuid(),
     firstname: faker.name.firstName(),
@@ -72,7 +76,7 @@ const master = _.times(40, (n) => {
   };
 });
 
-const service = _.times(40, () => {
+const service = _.times(SERVICES, () => {
   return {
     id: faker.datatype.uuid(),
     title: faker.lorem.words(random(1, 3)),
@@ -80,7 +84,7 @@ const service = _.times(40, () => {
   };
 });
 
-const services = _.times(40, () => {
+const services = _.times(SERVICES, () => {
   return {
     id: faker.datatype.uuid(),
     title: faker.lorem.words(random(1, 3)),
