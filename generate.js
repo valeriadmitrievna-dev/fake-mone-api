@@ -109,7 +109,7 @@ const cards = CARDS.map((card, index) => {
 
   return {
     ...card,
-    date: fns.addHours(toSameDate(new Date(card.date), fns.addDays(new Date(), diff)), 3),
+    date: fns.subHours(toSameDate(new Date(card.date), fns.addDays(new Date(), diff)), 3),
     client,
     master,
     service,
