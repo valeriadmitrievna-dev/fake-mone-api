@@ -95,6 +95,26 @@ server.get("/active_card", (req, res) => {
   }
 });
 
+server.get("/page_by_master", (req, res) => {
+  try {
+    const { id, _limit } = req.query;
+    if (!id) return res.status(400).json({ error: "Master ID is required" });
+    const master = DB.masters.find((m) => m.id === id);
+
+    if (!master)
+      return res
+        .status(404)
+        .json({ error: `Master with ID: ${id} doesn't exist` });
+
+    const masterIndex = DB.masters.findIndex((m) => m.id === id) + 1;
+    const masterPage = Math.ceil(masterIndex / _limit);
+
+    res.status(200).json({ page: masterPage });
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+});
+
 server.get("/cards_for_column", (req, res) => {
   try {
     const { master, date } = req.query;

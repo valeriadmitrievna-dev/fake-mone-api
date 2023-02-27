@@ -62,25 +62,28 @@ const removeInArray = (arr, index, count) => {
 const generateCards = (arr, index) => {
   const chance = Math.random();
   let duration;
-  if (chance <= 10 / 180) {
+  const time = Math.abs(
+    fns.differenceInMinutes(arr[index].start, arr[arr.length - 1].end)
+  );
+  if (chance <= 0.1 && time >= 180) {
     duration = 180;
     removeInArray(arr, index, 180 / 15 - 1);
-  } else if (chance <= 10 / 150) {
+  } else if (chance <= 0.15 && time >= 150) {
     duration = 150;
     removeInArray(arr, index, 150 / 15 - 1);
-  } else if (chance <= 10 / 120) {
+  } else if (chance <= 0.15 && time >= 120) {
     duration = 120;
     removeInArray(arr, index, 120 / 15 - 1);
-  } else if (chance <= 10 / 90) {
+  } else if (chance <= 0.2 && time >= 90) {
     duration = 90;
     removeInArray(arr, index, 90 / 15 - 1);
-  } else if (chance <= 10 / 60) {
+  } else if (chance <= 0.5 && time >= 60) {
     duration = 60;
     removeInArray(arr, index, 60 / 15 - 1);
-  } else if (chance <= 10 / 45) {
+  } else if (chance <= 0.5 && time >= 45) {
     duration = 45;
     removeInArray(arr, index, 45 / 15 - 1);
-  } else if (chance <= 10 / 30) {
+  } else if (chance <= 0.5 && time >= 30) {
     duration = 30;
     removeInArray(arr, index, 30 / 15 - 1);
   } else {
@@ -91,7 +94,6 @@ const generateCards = (arr, index) => {
 };
 
 const generateCardsData = (card) => {
-  // card: date, master, service's duration
   const client = randomFromArray(clients);
   const services_15 = services.filter((s) => s.duration === 15);
   const fit_services = services.filter(
@@ -101,12 +103,15 @@ const generateCardsData = (card) => {
   const done = fns.isBefore(new Date(card.date), new Date());
   const status = done ? 2 : random(0, 1);
 
+  const duration = card.service.duration;
+
   return {
     ...card,
     service,
     client,
     status,
     id: faker.datatype.uuid(),
+    duration,
   };
 };
 
@@ -137,13 +142,9 @@ const masters = _.times(MASTERS, (n) => {
   };
 });
 
-const master = _.times(MASTERS, (n) => {
+const master = masters.map((master) => {
   return {
-    id: faker.datatype.uuid(),
-    firstname: faker.name.firstName(),
-    lastname: faker.name.lastName(),
-    avatar: Math.random() > 0.5 ? faker.image.avatar() : null,
-    purpose: faker.helpers.arrayElement(purposes),
+    ...master,
     phrase: faker.lorem.words(random(2, 7)),
     about: _.times(random(2, 5), () => faker.lorem.words(random(4, 16))),
     bests: _.times(random(0, 5), () => faker.lorem.words(random(4, 16))),
