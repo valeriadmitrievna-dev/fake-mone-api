@@ -133,7 +133,7 @@ server.get("/cards_for_column", (req, res) => {
   }
 });
 
-server.use(middlewares);
+server.use(middlewares)
 server.use(router);
 
 server.listen(5000, () => {
