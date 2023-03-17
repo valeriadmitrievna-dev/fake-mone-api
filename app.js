@@ -9,6 +9,42 @@ const cors = require("cors");
 
 server.use(cors());
 
+function calculateTotalPrice(cards) {
+  let totalPrice = 0;
+  cards.forEach((card) => {
+    card.services.forEach((service) => {
+      totalPrice += service.price;
+    });
+  });
+  return totalPrice;
+}
+
+const getMinutesByInterval = (interval) => {
+  const duration = fns.intervalToDuration(interval);
+  const minutes = (duration.minutes ?? 0) + (duration.hours ?? 0) * 60;
+
+  return minutes;
+};
+
+function calculateOccupancyPercentage(cards, worktime) {
+  const workdayDuration = getMinutesByInterval(worktime);
+  let occupiedDuration = 0;
+
+  cards.forEach((card) => {
+    const cardDuration = card.services.reduce((a, b) => a + b.duration, 0);
+    occupiedDuration += cardDuration;
+  });
+
+  const occupancy = (occupiedDuration / workdayDuration) * 100;
+
+  return Math.round(occupancy);
+}
+
+server.get("/masters-count", (req, res) => {
+  const count = DB.masters.length;
+  res.status(200).json(count);
+});
+
 server.get("/cards_for_group", (req, res) => {
   try {
     const { masters, date } = req.query;
@@ -16,24 +52,32 @@ server.get("/cards_for_group", (req, res) => {
     if (!masters) {
       return res.status(400).json({ error: "Masters is required" });
     }
-
     if (!Array.isArray(masters)) {
       return res.status(400).json({ error: "Masters should be array of ids" });
     }
-
     if (!date) {
       return res.status(400).json({ error: "Date is required" });
     }
 
+    const { worktime } = DB.secret;
+
     const result = masters.map((master) => {
+      const cards = DB.cards.filter(
+        (card) =>
+          card.master.id === master &&
+          fns.isSameDay(new Date(card.date), new Date(date))
+      );
+
+      const price = calculateTotalPrice(cards);
+      const occupancy = calculateOccupancyPercentage(cards, worktime);
+
       return {
         date,
         master: DB.masters.find((m) => m.id === master).id,
-        cards: DB.cards.filter(
-          (card) =>
-            card.master.id === master &&
-            fns.isSameDay(new Date(card.date), new Date(date))
-        ),
+        cards,
+        price,
+        occupancy,
+        count: cards.length,
       };
     });
 
@@ -56,17 +100,29 @@ server.get("/cards_for_master", (req, res) => {
       return res.status(400).json({ error: "Date is required" });
     }
 
+    const { worktime } = DB.secret;
+
     const result = fns
       .eachDayOfInterval({ start: new Date(dateStart), end: new Date(dateEnd) })
-      .map((day) => ({
-        date: day,
-        master,
-        cards: DB.cards.filter(
+      .map((day) => {
+        const cards = DB.cards.filter(
           (card) =>
             card.master.id === master &&
             fns.isSameDay(new Date(card.date), new Date(day))
-        ),
-      }));
+        );
+
+        const price = calculateTotalPrice(cards);
+        const occupancy = calculateOccupancyPercentage(cards, worktime);
+
+        return {
+          date: day,
+          master,
+          cards,
+          price,
+          occupancy,
+          count: cards.length,
+        };
+      });
 
     res.status(200).json(result);
   } catch (error) {
@@ -133,9 +189,34 @@ server.get("/cards_for_column", (req, res) => {
   }
 });
 
-server.use(middlewares)
+server.get("/services_array", (req, res) => {
+  const { ids } = req.query;
+  const services = DB.service.filter((service) => !!ids.includes(service.id));
+
+  return res.status(200).json(services);
+});
+
+server.get("/client-appointments-pages", (req, res) => {
+  const { id, count } = req.query;
+
+  if (!id)
+    return res
+      .status(400)
+      .json({ error: "Отсутсвует обязательное поле: id клиента." });
+  if (!count)
+    return res.status(400).json({
+      error:
+        "Отсутсвует обязательное поле: колиечество встреч на одну страницу.",
+    });
+  const appointments = DB.cards.filter((card) => card.client.id === id).length;
+  const pages = Math.ceil(appointments / count);
+
+  return res.status(200).json(pages);
+});
+
+server.use(middlewares);
 server.use(router);
 
 server.listen(5000, () => {
-  console.log("JSON Server is running");
+  console.log("JSON Server is running on port 5000");
 });

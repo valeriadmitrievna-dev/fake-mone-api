@@ -26,6 +26,38 @@ const DAYS = 5;
 const START_DATE = new Date();
 const END_DATE = fns.addDays(START_DATE, DAYS - 1);
 
+const TAGS = [
+  { title: "Постоянный", color: "#B0BBDB" },
+  { title: "Лояльный", color: "#A8D9E0" },
+  { title: "Красота по-русски", color: "#A0D9F9" },
+  { title: "Бьюти-план", color: "#E4C0BF" },
+  { title: "Приведи друга", color: "#A0D5C9" },
+];
+
+const roundToNearestQuarterHour = (date) => {
+  const minutes = date.getMinutes();
+  const remainder = minutes % 15;
+
+  if (remainder === 0) {
+    return date;
+  }
+  const roundedMinutes = 15 - remainder;
+  const newDate = new Date(date.getTime() + roundedMinutes * 60000);
+  newDate.setSeconds(0);
+  newDate.setMilliseconds(0);
+
+  return newDate;
+};
+
+function randomDateInRange(startDate, endDate) {
+  const startTime = startDate.getTime();
+  const endTime = endDate.getTime();
+  const randomTime = startTime + Math.random() * (endTime - startTime);
+  const date = new Date(randomTime);
+  const result = roundToNearestQuarterHour(date);
+  return result;
+}
+
 const random = (min, max) => Math.floor(Math.random() * (max + 1 - min) + min);
 const randomFromArray = (array) =>
   array[Math.floor(Math.random() * array.length)];
@@ -34,11 +66,6 @@ const getNRandomsFromArray = (array, n) => {
   const shuffled = shuffleArray(array);
   return shuffled.slice(0, n);
 };
-const toSameDate = (toDate, date) =>
-  fns.setYear(
-    fns.setMonth(fns.setDate(toDate, fns.getDate(date)), fns.getMonth(date)),
-    fns.getYear(date)
-  );
 const getIntervals = (start, end, shift) => {
   const result = [];
 
@@ -124,13 +151,6 @@ const generateCardsData = (card) => {
   };
 };
 
-const getMinutesByInterval = (start, end) => {
-  const duration = fns.intervalToDuration({ start, end });
-  const minutes = (duration.minutes ?? 0) + (duration.hours ?? 0) * 60;
-
-  return minutes;
-};
-
 const clients = _.times(CLIENTS, (n) => {
   return {
     id: faker.datatype.uuid(),
@@ -146,6 +166,21 @@ const client = clients.map((client) => ({
   age: faker.random.numeric(2),
   registeredAt: faker.date.past(),
   sex: faker.helpers.arrayElement(["М", "Ж"]),
+  appointments: {
+    count: random(0, 40),
+    frequency: random(0, 12) + " раз в " + randomFromArray(["год", "месяц"]),
+    last: randomDateInRange(new Date("2023-01-01"), new Date()),
+    next: randomDateInRange(new Date("2023-01-01"), new Date()),
+    missed: random(0, 10),
+  },
+  about: _.times(random(2, 5), () => faker.lorem.words(random(4, 16))),
+  finanses: {
+    banace: random(0, 10000),
+    average: random(0, 10000),
+    bonus: random(0, 1000),
+    wasted: random(0, 20000),
+  },
+  tags: TAGS.slice(0, random(0, 5)),
 }));
 
 const masters = _.times(MASTERS, (n) => {
@@ -226,106 +261,7 @@ const getCards = (
     .flat()
     .map(generateCardsData);
 
-const mergeOverlappingDateRanges = (dateRanges) => {
-  const sorted = dateRanges.sort(
-    (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
-  );
-
-  const ret = sorted.reduce((acc, curr) => {
-    if (acc.length === 0) {
-      return [curr];
-    }
-
-    const prev = acc.pop();
-
-    if (curr.end <= prev.end) {
-      return [...acc, prev];
-    }
-
-    if (curr.start <= prev.end && Math.random() > 0.75) {
-      return [...acc, { ...prev, start: prev.start, end: curr.end }];
-    }
-
-    return [...acc, prev, curr];
-  }, []);
-
-  return ret;
-};
-
-const test = (
-  density = 0.5 // 0 - 1
-) =>
-  mergeOverlappingDateRanges(
-    masters
-      .map((master) => {
-        return fns
-          .eachDayOfInterval({
-            start: START_DATE,
-            end: END_DATE,
-          })
-          .map((day) => {
-            const start = fns.setMinutes(fns.setHours(day, START), 0);
-            const end = fns.setMinutes(fns.setHours(day, END), 0);
-
-            return timeArrayToSegments(getIntervals(start, end, SEGMENT))
-              .map((seg, index, arr) => {
-                const duration = generateCards(arr, index);
-                return {
-                  date: new Date(seg.start),
-                  master,
-                  service: { duration },
-                };
-              })
-              .filter((c) => c)
-              .filter(() => Math.random() > density)
-              .flat();
-          })
-          .flat();
-      })
-      .flat()
-      .map(testGenerate)
-  ).map(({ start, end, master }) => {
-    const duration = getMinutesByInterval(new Date(start), new Date(end));
-    const cardServices = [];
-
-    while (getFullDuration(cardServices) < duration) {
-      const shuffledServices = shuffleArray(service);
-      const toAdd = shuffledServices.find(
-        (s) =>
-          s.duration + getFullDuration(cardServices) <= duration &&
-          !cardServices.find((_s) => _s.id === s.id)
-      );
-      if (toAdd) cardServices.push(toAdd);
-      else continue;
-    }
-
-    const client = randomFromArray(clients);
-    const done = fns.isBefore(new Date(start), new Date());
-    const status = done ? 2 : random(0, 1);
-
-    return {
-      date: start,
-      duration,
-      services: cardServices,
-      client,
-      master,
-      status,
-      id: faker.datatype.uuid(),
-    };
-  });
-
-const testGenerate = (card) => {
-  const end = fns.addMinutes(new Date(card.date), card.service.duration);
-
-  return {
-    start: new Date(card.date),
-    end: new Date(end),
-    duration: card.service.duration,
-    master: card.master,
-  };
-};
-
-const _test = () =>
+const test = () =>
   getCards().map((c) => {
     const sumDuration = c.service.duration;
     const cardServices = [];
@@ -341,8 +277,7 @@ const _test = () =>
       else continue;
     }
 
-    const done = fns.isBefore(new Date(c.date), new Date());
-    const status = done ? 2 : random(0, 1);
+    const status = random(0, 4);
 
     return {
       id: c.id,
@@ -355,16 +290,26 @@ const _test = () =>
     };
   });
 
+const notifications = [
+  {
+    id: faker.datatype.uuid(),
+    date: new Date("December 19, 2022 08:24:00"),
+    title: "Начата работа над проектом MONE CRM",
+    body: "В этот день был сделан первый коммит. До сего момента велась работа над дизайном и архитектурой проекта, но в этот день началась работа именно с кодом.",
+    variant: "info",
+  },
+];
+
 module.exports = function () {
   return {
     clients,
     masters,
     services,
-    cards: _test(),
+    cards: test(),
     client,
     master,
     service,
     secret,
-    test: _test(),
+    notifications,
   };
 };
