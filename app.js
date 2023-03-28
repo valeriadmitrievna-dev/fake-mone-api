@@ -9,36 +9,7 @@ const cors = require("cors");
 
 server.use(cors());
 
-function calculateTotalPrice(cards) {
-  let totalPrice = 0;
-  cards.forEach((card) => {
-    card.services.forEach((service) => {
-      totalPrice += service.price;
-    });
-  });
-  return totalPrice;
-}
-
-const getMinutesByInterval = (interval) => {
-  const duration = fns.intervalToDuration(interval);
-  const minutes = (duration.minutes ?? 0) + (duration.hours ?? 0) * 60;
-
-  return minutes;
-};
-
-function calculateOccupancyPercentage(cards, worktime) {
-  const workdayDuration = getMinutesByInterval(worktime);
-  let occupiedDuration = 0;
-
-  cards.forEach((card) => {
-    const cardDuration = card.services.reduce((a, b) => a + b.duration, 0);
-    occupiedDuration += cardDuration;
-  });
-
-  const occupancy = (occupiedDuration / workdayDuration) * 100;
-
-  return Math.round(occupancy);
-}
+const utils = require("./utils");
 
 server.get("/masters-count", (req, res) => {
   const count = DB.masters.length;
@@ -68,8 +39,8 @@ server.get("/cards_for_group", (req, res) => {
           fns.isSameDay(new Date(card.date), new Date(date))
       );
 
-      const price = calculateTotalPrice(cards);
-      const occupancy = calculateOccupancyPercentage(cards, worktime);
+      const price = utils.calculateTotalPrice(cards);
+      const occupancy = utils.calculateOccupancyPercentage(cards, worktime);
 
       return {
         date,
@@ -83,7 +54,7 @@ server.get("/cards_for_group", (req, res) => {
 
     res.status(200).json(result);
   } catch (error) {
-    console.log(error.message);
+    console.log(error);
     return res.status(400).json({ error: error.message });
   }
 });
@@ -111,8 +82,8 @@ server.get("/cards_for_master", (req, res) => {
             fns.isSameDay(new Date(card.date), new Date(day))
         );
 
-        const price = calculateTotalPrice(cards);
-        const occupancy = calculateOccupancyPercentage(cards, worktime);
+        const price = utils.calculateTotalPrice(cards);
+        const occupancy = utils.calculateOccupancyPercentage(cards, worktime);
 
         return {
           date: day,
@@ -165,7 +136,7 @@ server.get("/page_by_master", (req, res) => {
     const masterIndex = DB.masters.findIndex((m) => m.id === id) + 1;
     const masterPage = Math.ceil(masterIndex / _limit);
 
-    res.status(200).json({ page: masterPage });
+    res.status(200).json(masterPage);
   } catch (error) {
     return res.status(400).json({ error: error.message });
   }
@@ -212,6 +183,56 @@ server.get("/client-appointments-pages", (req, res) => {
   const pages = Math.ceil(appointments / count);
 
   return res.status(200).json(pages);
+});
+
+server.get("/client-appointments", (req, res) => {
+  const { id } = req.query;
+  const appointments = DB.cards.filter((card) => card.client.id === id);
+  const sorted = [];
+
+  appointments
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .forEach((appointment) => {
+      const date = appointment.date;
+      const index = sorted.findIndex((obj) =>
+        fns.isSameDay(new Date(obj.date), new Date(appointment.date))
+      );
+
+      if (index < 0) {
+        sorted.push({ date, appointments: [appointment] });
+      } else {
+        sorted[index].appointments.push(appointment);
+      }
+    });
+
+  return res.status(200).json(sorted);
+});
+
+server.get("/possible-time", (req, res) => {
+  const { master, date: reqDate, duration } = req.query;
+  if (!duration) return res.status(400).json({ error: "Duration is required" });
+  if (!master) return res.status(400).json({ error: "Master id is required" });
+  if (!reqDate) return res.status(400).json({ error: "Date is required" });
+
+  const date = new Date(reqDate);
+
+  const cards = DB.cards
+    .filter(
+      (c) =>
+        fns.isSameDay(new Date(date), new Date(c.date)) &&
+        c.master.id === master
+    )
+    .map((c) => ({
+      start: c.date,
+      end: fns.addMinutes(new Date(c.date), c.duration),
+    }));
+
+  const spaces = utils
+    .getFreeTimeRangesGPT(DB.secret.worktime, cards, date)
+    .map((space) => utils.getPossibleSegments(space, duration))
+    .flat();
+    
+  return res.status(200).json(spaces);
 });
 
 server.use(middlewares);

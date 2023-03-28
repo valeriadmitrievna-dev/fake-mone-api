@@ -3,6 +3,7 @@ const { faker } = require("@faker-js/faker");
 faker.setLocale("ru");
 faker.locale = "ru";
 const fns = require("date-fns");
+const utils = require("./utils");
 
 const durations = [15, 30, 45, 60, 90, 120, 150, 180];
 const purposes = [
@@ -34,68 +35,6 @@ const TAGS = [
   { title: "Приведи друга", color: "#A0D5C9" },
 ];
 
-const roundToNearestQuarterHour = (date) => {
-  const minutes = date.getMinutes();
-  const remainder = minutes % 15;
-
-  if (remainder === 0) {
-    return date;
-  }
-  const roundedMinutes = 15 - remainder;
-  const newDate = new Date(date.getTime() + roundedMinutes * 60000);
-  newDate.setSeconds(0);
-  newDate.setMilliseconds(0);
-
-  return newDate;
-};
-
-function randomDateInRange(startDate, endDate) {
-  const startTime = startDate.getTime();
-  const endTime = endDate.getTime();
-  const randomTime = startTime + Math.random() * (endTime - startTime);
-  const date = new Date(randomTime);
-  const result = roundToNearestQuarterHour(date);
-  return result;
-}
-
-const random = (min, max) => Math.floor(Math.random() * (max + 1 - min) + min);
-const randomFromArray = (array) =>
-  array[Math.floor(Math.random() * array.length)];
-const shuffleArray = (array) => array.sort(() => 0.5 - Math.random());
-const getNRandomsFromArray = (array, n) => {
-  const shuffled = shuffleArray(array);
-  return shuffled.slice(0, n);
-};
-const getIntervals = (start, end, shift) => {
-  const result = [];
-
-  while (!fns.isSameHour(start, end) || !fns.isSameMinute(start, end)) {
-    result.push(start);
-    start = fns.addMinutes(start, shift);
-  }
-  result.push(end);
-
-  return result;
-};
-const timeArrayToSegments = (array) =>
-  array
-    .map((date, index) => ({
-      start: date,
-      end: array[index + 1],
-    }))
-    .slice(0, array.length - 1);
-
-const removeInArray = (arr, index, count) => {
-  for (let i = 1; i <= count; i++) {
-    delete arr[index + i];
-  }
-};
-
-const getFullDuration = (services) =>
-  services.length
-    ? services.reduce((sum, service) => sum + service.duration, 0)
-    : 0;
-
 const generateCards = (arr, index) => {
   const chance = Math.random();
   let duration;
@@ -104,28 +43,28 @@ const generateCards = (arr, index) => {
   );
   if (chance <= 0.1 && time >= 180) {
     duration = 180;
-    removeInArray(arr, index, 180 / 15 - 1);
+    utils.removeInArray(arr, index, 180 / 15 - 1);
   } else if (chance <= 0.15 && time >= 150) {
     duration = 150;
-    removeInArray(arr, index, 150 / 15 - 1);
+    utils.removeInArray(arr, index, 150 / 15 - 1);
   } else if (chance <= 0.15 && time >= 120) {
     duration = 120;
-    removeInArray(arr, index, 120 / 15 - 1);
+    utils.removeInArray(arr, index, 120 / 15 - 1);
   } else if (chance <= 0.2 && time >= 90) {
     duration = 90;
-    removeInArray(arr, index, 90 / 15 - 1);
+    utils.removeInArray(arr, index, 90 / 15 - 1);
   } else if (chance <= 0.5 && time >= 60) {
     duration = 60;
-    removeInArray(arr, index, 60 / 15 - 1);
+    utils.removeInArray(arr, index, 60 / 15 - 1);
   } else if (chance <= 0.5 && time >= 45) {
     duration = 45;
-    removeInArray(arr, index, 45 / 15 - 1);
+    utils.removeInArray(arr, index, 45 / 15 - 1);
   } else if (chance <= 0.5 && time >= 30) {
     duration = 30;
-    removeInArray(arr, index, 30 / 15 - 1);
+    utils.removeInArray(arr, index, 30 / 15 - 1);
   } else {
     duration = 15;
-    removeInArray(arr, index, 15 / 15 - 1);
+    utils.removeInArray(arr, index, 15 / 15 - 1);
   }
   return duration;
 };
@@ -133,19 +72,16 @@ const generateCards = (arr, index) => {
 const generateCardsData = (card) => {
   // card: date, master, service's duration
   const fit_15 = services.filter((s) => s.duration === 15);
-  const card_services = getNRandomsFromArray(fit_15, 1);
+  const card_services = utils.getNRandomsFromArray(fit_15, 1);
 
-  const client = randomFromArray(clients);
-  const done = fns.isBefore(new Date(card.date), new Date());
-  const status = done ? 2 : random(0, 1);
+  const client = utils.randomFromArray(clients);
 
-  const duration = getFullDuration(card_services);
+  const duration = utils.getFullDuration(card_services);
 
   return {
     ...card,
     services: card_services,
     client,
-    status,
     id: faker.datatype.uuid(),
     duration,
   };
@@ -167,20 +103,20 @@ const client = clients.map((client) => ({
   registeredAt: faker.date.past(),
   sex: faker.helpers.arrayElement(["М", "Ж"]),
   appointments: {
-    count: random(0, 40),
-    frequency: random(0, 12) + " раз в " + randomFromArray(["год", "месяц"]),
-    last: randomDateInRange(new Date("2023-01-01"), new Date()),
-    next: randomDateInRange(new Date("2023-01-01"), new Date()),
-    missed: random(0, 10),
+    count: utils.random(0, 40),
+    frequency: utils.random(0, 12) + " раз в " + utils.randomFromArray(["год", "месяц"]),
+    last: utils.randomDateInRange(new Date("2023-01-01"), new Date()),
+    next: utils.randomDateInRange(new Date("2023-01-01"), new Date()),
+    missed: utils.random(0, 10),
   },
-  about: _.times(random(2, 5), () => faker.lorem.words(random(4, 16))),
+  about: _.times(utils.random(2, 5), () => faker.lorem.words(utils.random(4, 16))),
   finanses: {
-    banace: random(0, 10000),
-    average: random(0, 10000),
-    bonus: random(0, 1000),
-    wasted: random(0, 20000),
+    banace: utils.random(0, 10000),
+    average: utils.random(0, 10000),
+    bonus: utils.random(0, 1000),
+    wasted: utils.random(0, 20000),
   },
-  tags: TAGS.slice(0, random(0, 5)),
+  tags: TAGS.slice(0, utils.random(0, 5)),
 }));
 
 const masters = _.times(MASTERS, (n) => {
@@ -196,10 +132,10 @@ const masters = _.times(MASTERS, (n) => {
 const master = masters.map((master) => {
   return {
     ...master,
-    phrase: faker.lorem.words(random(2, 7)),
-    about: _.times(random(2, 5), () => faker.lorem.words(random(4, 16))),
-    bests: _.times(random(0, 5), () => faker.lorem.words(random(4, 16))),
-    reviews: _.times(random(0, 5), () => faker.lorem.paragraph()),
+    phrase: faker.lorem.words(utils.random(2, 7)),
+    about: _.times(utils.random(2, 5), () => faker.lorem.words(utils.random(4, 16))),
+    bests: _.times(utils.random(0, 5), () => faker.lorem.words(utils.random(4, 16))),
+    reviews: _.times(utils.random(0, 5), () => faker.lorem.paragraph()),
   };
 });
 
@@ -214,10 +150,10 @@ const service = _.times(SERVICES, () => {
 
 const services = service.map((s) => ({
   ...s,
-  about: _.times(random(2, 5), () => faker.lorem.words(random(4, 16))),
-  steps: _.times(random(3, 5), () => faker.lorem.words(random(4, 16))),
-  reviews: _.times(random(0, 5), () => faker.lorem.paragraph()),
-  photos: _.times(random(0, 5), () => faker.image.fashion()),
+  about: _.times(utils.random(2, 5), () => faker.lorem.words(utils.random(4, 16))),
+  steps: _.times(utils.random(3, 5), () => faker.lorem.words(utils.random(4, 16))),
+  reviews: _.times(utils.random(0, 5), () => faker.lorem.paragraph()),
+  photos: _.times(utils.random(0, 5), () => faker.image.fashion()),
 }));
 
 const secret = {
@@ -243,7 +179,7 @@ const getCards = (
           const start = fns.setMinutes(fns.setHours(day, START), 0);
           const end = fns.setMinutes(fns.setHours(day, END), 0);
 
-          return timeArrayToSegments(getIntervals(start, end, SEGMENT))
+          return utils.timeArrayToSegments(utils.getIntervals(start, end, SEGMENT))
             .map((seg, index, arr) => {
               const duration = generateCards(arr, index);
               return {
@@ -266,18 +202,18 @@ const test = () =>
     const sumDuration = c.service.duration;
     const cardServices = [];
 
-    while (getFullDuration(cardServices) < sumDuration) {
-      const shuffledServices = shuffleArray(service);
+    while (utils.getFullDuration(cardServices) < sumDuration) {
+      const shuffledServices = utils.shuffleArray(service);
       const toAdd = shuffledServices.find(
         (s) =>
-          s.duration + getFullDuration(cardServices) <= sumDuration &&
+          s.duration + utils.getFullDuration(cardServices) <= sumDuration &&
           !cardServices.find((_s) => _s.id === s.id)
       );
       if (toAdd) cardServices.push(toAdd);
       else continue;
     }
 
-    const status = random(0, 4);
+    const status = utils.random(0, 3);
 
     return {
       id: c.id,
@@ -286,7 +222,7 @@ const test = () =>
       client: c.client,
       services: cardServices,
       status,
-      duration: getFullDuration(cardServices),
+      duration: utils.getFullDuration(cardServices),
     };
   });
 
