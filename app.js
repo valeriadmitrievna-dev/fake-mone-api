@@ -1,243 +1,285 @@
-const jsonServer = require("json-server");
-const server = jsonServer.create();
-const generateDB = require("./generate");
-const DB = generateDB();
-const router = jsonServer.router(DB);
-const middlewares = jsonServer.defaults();
+const express = require("express");
+const app = express();
 const fns = require("date-fns");
 const cors = require("cors");
 
-server.use(cors());
+const DATA = require("./data");
+const dataHelpers = require("./data-helpers");
 
-const utils = require("./utils");
+app.use(cors());
+app.use(express.json());
 
-server.get("/masters-count", (req, res) => {
-  const count = DB.masters.length;
-  res.status(200).json(count);
+app.get("/", (req, res) => {
+  return res.status(200).json({ message: "Сервер запушен!" });
 });
 
-server.get("/cards_for_group", (req, res) => {
-  try {
-    const { masters, date } = req.query;
+app.get("/services", (req, res) => {
+  const { q, categories: qCategories, ids } = req.query;
+  const categories = qCategories?.map((c) => +c) || [];
 
-    if (!masters) {
-      return res.status(400).json({ error: "Masters is required" });
-    }
-    if (!Array.isArray(masters)) {
-      return res.status(400).json({ error: "Masters should be array of ids" });
-    }
-    if (!date) {
-      return res.status(400).json({ error: "Date is required" });
-    }
+  if (ids?.length) {
+    const services = DATA.SERVICES.filter(service => ids.includes(service.id));
 
-    const { worktime } = DB.secret;
+    return res.status(200).json(services);
+  } else {
+    const services = DATA.SERVICES.filter((service) => {
+      const matchTitle = q
+        ? service.title.toLowerCase().startsWith(q.toLowerCase())
+        : true;
+      const matchCategory = !!categories.length
+        ? categories.includes(service.category.key)
+        : true;
 
-    const result = masters.map((master) => {
-      const cards = DB.cards.filter(
-        (card) =>
-          card.master.id === master &&
-          fns.isSameDay(new Date(card.date), new Date(date))
-      );
-
-      const price = utils.calculateTotalPrice(cards);
-      const occupancy = utils.calculateOccupancyPercentage(cards, worktime);
-
-      return {
-        date,
-        master: DB.masters.find((m) => m.id === master).id,
-        cards,
-        price,
-        occupancy,
-        count: cards.length,
-      };
-    });
-
-    res.status(200).json(result);
-  } catch (error) {
-    console.log(error);
-    return res.status(400).json({ error: error.message });
-  }
-});
-
-server.get("/cards_for_master", (req, res) => {
-  try {
-    const { master, dateStart, dateEnd } = req.query;
-
-    if (!master) {
-      return res.status(400).json({ error: "Masters is required" });
-    }
-
-    if (!dateStart || !dateEnd) {
-      return res.status(400).json({ error: "Date is required" });
-    }
-
-    const { worktime } = DB.secret;
-
-    const result = fns
-      .eachDayOfInterval({ start: new Date(dateStart), end: new Date(dateEnd) })
-      .map((day) => {
-        const cards = DB.cards.filter(
-          (card) =>
-            card.master.id === master &&
-            fns.isSameDay(new Date(card.date), new Date(day))
-        );
-
-        const price = utils.calculateTotalPrice(cards);
-        const occupancy = utils.calculateOccupancyPercentage(cards, worktime);
-
-        return {
-          date: day,
-          master,
-          cards,
-          price,
-          occupancy,
-          count: cards.length,
-        };
-      });
-
-    res.status(200).json(result);
-  } catch (error) {
-    return res.status(400).json({ error: error.message });
-  }
-});
-
-server.get("/active_card", (req, res) => {
-  try {
-    const { cardId, _limit } = req.query;
-    if (!cardId) return res.status(400).json({ error: "Card ID is required" });
-    const card = DB.cards.find((c) => c.id === cardId);
-
-    if (!card)
-      return res
-        .status(404)
-        .json({ error: `Card with ID:${cardId} doesn't exist` });
-
-    const masterIndex =
-      DB.masters.findIndex((m) => m.id === card.master.id) + 1;
-    const masterPage = Math.ceil(masterIndex / _limit);
-
-    res.status(200).json({ page: masterPage });
-  } catch (error) {
-    return res.status(400).json({ error: error.message });
-  }
-});
-
-server.get("/page_by_master", (req, res) => {
-  try {
-    const { id, _limit } = req.query;
-    if (!id) return res.status(400).json({ error: "Master ID is required" });
-    const master = DB.masters.find((m) => m.id === id);
-
-    if (!master)
-      return res
-        .status(404)
-        .json({ error: `Master with ID: ${id} doesn't exist` });
-
-    const masterIndex = DB.masters.findIndex((m) => m.id === id) + 1;
-    const masterPage = Math.ceil(masterIndex / _limit);
-
-    res.status(200).json(masterPage);
-  } catch (error) {
-    return res.status(400).json({ error: error.message });
-  }
-});
-
-server.get("/cards_for_column", (req, res) => {
-  try {
-    const { master, date } = req.query;
-    if (!master)
-      return res.status(400).json({ error: "Master ID is required" });
-    if (!date) return res.status(400).json({ error: "Date is required" });
-    const cards = DB.cards.filter(
-      (c) =>
-        c.master.id === master &&
-        fns.isSameDay(new Date(c.date), new Date(date))
-    );
-
-    res.status(200).json(cards);
-  } catch (error) {
-    return res.status(400).json({ error: error.message });
-  }
-});
-
-server.get("/services_array", (req, res) => {
-  const { ids } = req.query;
-  const services = DB.service.filter((service) => !!ids.includes(service.id));
-
-  return res.status(200).json(services);
-});
-
-server.get("/client-appointments-pages", (req, res) => {
-  const { id, count } = req.query;
-
-  if (!id)
-    return res
-      .status(400)
-      .json({ error: "Отсутсвует обязательное поле: id клиента." });
-  if (!count)
-    return res.status(400).json({
-      error:
-        "Отсутсвует обязательное поле: колиечество встреч на одну страницу.",
-    });
-  const appointments = DB.cards.filter((card) => card.client.id === id).length;
-  const pages = Math.ceil(appointments / count);
-
-  return res.status(200).json(pages);
-});
-
-server.get("/client-appointments", (req, res) => {
-  const { id } = req.query;
-  const appointments = DB.cards.filter((card) => card.client.id === id);
-  const sorted = [];
-
-  appointments
-    .sort((a, b) => new Date(a.date) - new Date(b.date))
-    .forEach((appointment) => {
-      const date = appointment.date;
-      const index = sorted.findIndex((obj) =>
-        fns.isSameDay(new Date(obj.date), new Date(appointment.date))
-      );
-
-      if (index < 0) {
-        sorted.push({ date, appointments: [appointment] });
-      } else {
-        sorted[index].appointments.push(appointment);
-      }
-    });
-
-  return res.status(200).json(sorted);
-});
-
-server.get("/possible-time", (req, res) => {
-  const { master, date: reqDate, duration } = req.query;
-  if (!duration) return res.status(400).json({ error: "Duration is required" });
-  if (!master) return res.status(400).json({ error: "Master id is required" });
-  if (!reqDate) return res.status(400).json({ error: "Date is required" });
-
-  const date = new Date(reqDate);
-
-  const cards = DB.cards
-    .filter(
-      (c) =>
-        fns.isSameDay(new Date(date), new Date(c.date)) &&
-        c.master.id === master
-    )
-    .map((c) => ({
-      start: c.date,
-      end: fns.addMinutes(new Date(c.date), c.duration),
+      return matchCategory && matchTitle;
+    }).map((service) => ({
+      id: service.id,
+      title: service.title,
+      duration: service.duration,
+      price: service.price,
+      category: service.category,
     }));
 
-  const spaces = utils
-    .getFreeTimeRangesGPT(DB.secret.worktime, cards, date)
-    .map((space) => utils.getPossibleSegments(space, duration))
-    .flat();
-    
-  return res.status(200).json(spaces);
+    return res.status(200).json(services);
+  }
 });
 
-server.use(middlewares);
-server.use(router);
+app.get("/services/:id", (req, res) => {
+  const { id } = req.params;
+  if (!id) return res.status(400).json({ error: "Не предоставлен service.id" });
 
-server.listen(5000, () => {
+  const service = DATA.SERVICES.find((s) => s.id === id);
+  if (!service)
+    return res.status(404).json({ error: "Услуга с таким ID не найдена" });
+
+  return res.status(200).json(service);
+});
+
+app.get("/services/:id/short", (req, res) => {
+  const { id } = req.params;
+  if (!id) return res.status(400).json({ error: "Не предоставлен service.id" });
+
+  const service = DATA.SERVICES.find((s) => s.id === id);
+  if (!service)
+    return res.status(404).json({ error: "Услуга с таким ID не найдена" });
+
+  return res.status(200).json({
+    id: service.id,
+    title: service.title,
+    duration: service.duration,
+    price: service.price,
+    category: service.category,
+  });
+});
+
+app.get("/clients", (req, res) => {
+  const { q = "" } = req.query;
+  const clients = DATA.CLIENTS.filter(
+    (client) =>
+      client.firstname.toLowerCase().startsWith(q.toLowerCase()) ||
+      client.lastname.toLowerCase().startsWith(q.toLowerCase())
+  ).map((client) => ({
+    id: client.id,
+    firstname: client.firstname,
+    lastname: client.lastname,
+    phone: client.phone,
+    avatar: client.avatar,
+  }));
+  return res.status(200).json(clients);
+});
+
+app.get("/clients/:id", (req, res) => {
+  const { id } = req.params;
+  if (!id) return res.status(400).json({ error: "Не предоставлен client.id" });
+
+  const client = DATA.CLIENTS.find((s) => s.id === id);
+  if (!client)
+    return res.status(404).json({ error: "Клиент с таким ID не найден" });
+
+  return res.status(200).json(client);
+});
+
+app.get("/clients/:id/short", (req, res) => {
+  const { id } = req.params;
+  if (!id) return res.status(400).json({ error: "Не предоставлен client.id" });
+
+  const client = DATA.CLIENTS.find((s) => s.id === id);
+  if (!client)
+    return res.status(404).json({ error: "Клиент с таким ID не найден" });
+
+  return res.status(200).json({
+    id: client.id,
+    avatar: client.avatar,
+    firstname: client.firstname,
+    lastname: client.lastname,
+    phone: client.phone,
+  });
+});
+
+app.get("/clients/:id/appointments", (req, res) => {
+  const { id } = req.params;
+  const { count = 5 } = req.query;
+  if (!id) return res.status(400).json({ error: "Не предоставлен client.id" });
+
+  const appointments = DATA.APPOINTMENTS.filter((a) => a.client.id === id);
+  const result = dataHelpers.getAppointmentsForClient(appointments, count);
+
+  return res.status(200).json(result);
+});
+
+app.get("/masters", (req, res) => {
+  const { page, limit, q, category } = req.query;
+  const masters = DATA.MASTERS;
+
+  if (page && limit) {
+    const slice = masters.slice((page - 1) * limit, page * limit);
+    return res.status(200).json(slice);
+  } else {
+    const searchedMasters = masters
+      .filter((master) => {
+        const matchFirstName = q
+          ? master.firstname.toLowerCase().startsWith(q.toLowerCase())
+          : true;
+        const matchLastName = q
+          ? master.lastname.toLowerCase().startsWith(q.toLowerCase())
+          : true;
+        const matchCategory = category
+          ? !!master.categories.find((c) => c.key === +category)
+          : true;
+
+        return matchCategory && (matchFirstName || matchLastName);
+      })
+      .map((master) => ({
+        id: master.id,
+        firstname: master.firstname,
+        lastname: master.lastname,
+        purpose: master.purpose,
+        categories: master.categories,
+        avatar: master.avatar,
+      }));
+    return res.status(200).json(searchedMasters);
+  }
+});
+
+app.get("/masters/page", (req, res) => {
+  const { id, limit } = req.query;
+  if (!id) return res.status(400).json({ error: "Не предоставлен master.id" });
+  if (!limit)
+    return res
+      .status(400)
+      .json({ error: "Не предоставлено количество отображаемых колонок" });
+
+  const master = DATA.MASTERS.find((m) => m.id === id);
+  if (!master)
+    return res.status(404).json({ error: "Мастер с таким ID не найден" });
+
+  const index = DATA.MASTERS.findIndex((m) => m.id === id) + 1;
+  const page = Math.ceil(index / limit);
+
+  return res.status(200).json(page);
+});
+
+app.get("/masters/count", (req, res) => {
+  const count = DATA.MASTERS.length;
+  return res.status(200).json(count);
+});
+
+app.get("/masters/:id", (req, res) => {
+  const { id } = req.params;
+  if (!id) return res.status(400).json({ error: "Не предоставлен master.id" });
+
+  const master = DATA.MASTERS.find((s) => s.id === id);
+  if (!master)
+    return res.status(404).json({ error: "Мастер с таким ID не найден" });
+
+  return res.status(200).json(master);
+});
+
+app.get("/masters/:id/short", (req, res) => {
+  const { id } = req.params;
+  if (!id) return res.status(400).json({ error: "Не предоставлен master.id" });
+
+  const master = DATA.MASTERS.find((s) => s.id === id);
+  if (!master)
+    return res.status(404).json({ error: "Мастер с таким ID не найден" });
+
+  return res.status(200).json({
+    id: master.id,
+    firstname: master.firstname,
+    lastname: master.lastname,
+    purpose: master.purpose,
+    avatar: master.avatar,
+  });
+});
+
+app.get("/appointments", (req, res) => {
+  const appointments = DATA.APPOINTMENTS;
+  return res.status(200).json(appointments);
+});
+
+app.get("/appointments/group", (req, res) => {
+  const { masters = [], date = new Date() } = req.query;
+
+  const columns = dataHelpers.getAppointmentsForGroup(
+    DATA.APPOINTMENTS,
+    masters,
+    new Date(date)
+  );
+
+  return res.status(200).json(columns);
+});
+
+app.get("/appointments/master", (req, res) => {
+  const { master, dates = [] } = req.query;
+
+  const columns = dataHelpers.getAppointmentsForDate(
+    DATA.APPOINTMENTS,
+    master,
+    dates
+  );
+
+  return res.status(200).json(columns);
+});
+
+app.put("/appointments/:id/duration", (req, res) => {
+  const { id } = req.params;
+  const { date, duration } = req.body;
+
+  const appointment = DATA.APPOINTMENTS.find(
+    (appointment) => appointment.id === id
+  );
+  if (!appointment)
+    return res.status(404).json({ error: "Встреча с таким ID не найдена" });
+
+  DATA.APPOINTMENTS = DATA.APPOINTMENTS.map((a) => {
+    if (a.id === id) {
+      return { ...a, duration, date };
+    }
+
+    return a;
+  });
+
+  return res.status(200).json({
+    previous: appointment.duration,
+    current: duration,
+  });
+});
+
+app.post("/appointments", (req, res) => {
+  const appointments = DATA.APPOINTMENTS;
+  return res.status(200).json(appointments);
+});
+
+// middlewares
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Ошибка на сервере." });
+});
+
+app.use((req, res, next) => {
+  return res.status(404).json({ error: "Страница не найдена" });
+});
+
+app.listen(5000, () => {
   console.log("JSON Server is running on port 5000");
 });

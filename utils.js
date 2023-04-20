@@ -140,7 +140,7 @@ const randomDateInRange = (startDate, endDate) => {
 };
 
 const random = (min, max) => Math.floor(Math.random() * (max + 1 - min) + min);
-const shuffleArray = (array) => array.sort(() => 0.5 - Math.random());
+const shuffleArray = (array) => array?.sort(() => 0.5 - Math.random()) || [];
 const getNRandomsFromArray = (array, n) => {
   const shuffled = shuffleArray(array);
   return shuffled.slice(0, n);

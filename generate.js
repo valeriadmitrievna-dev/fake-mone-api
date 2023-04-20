@@ -15,16 +15,16 @@ const purposes = [
   "Мастер-универсал",
 ];
 
-const CLIENTS = 100;
+const CLIENTS = 50;
 const MASTERS = 24;
-const SERVICES = 40;
+const SERVICES = 20;
 
 const START = 8;
 const END = 17;
 const SEGMENT = 15;
-const DAYS = 5;
+const DAYS = 7;
 
-const START_DATE = new Date();
+const START_DATE = fns.subDays(new Date(), 1);
 const END_DATE = fns.addDays(START_DATE, DAYS - 1);
 
 const TAGS = [
@@ -33,6 +33,15 @@ const TAGS = [
   { title: "Красота по-русски", color: "#A0D9F9" },
   { title: "Бьюти-план", color: "#E4C0BF" },
   { title: "Приведи друга", color: "#A0D5C9" },
+];
+
+const CATEGORIES = [
+  { key: 1, title: "Уход за волосами" },
+  { key: 2, title: "Уход за ногтями" },
+  { key: 3, title: "Уход за кожей лица и тела" },
+  { key: 4, title: "Услуги визажиста" },
+  { key: 5, title: "Спа-услуги" },
+  { key: 6, title: "Другие услуги" },
 ];
 
 const generateCards = (arr, index) => {
@@ -104,12 +113,15 @@ const client = clients.map((client) => ({
   sex: faker.helpers.arrayElement(["М", "Ж"]),
   appointments: {
     count: utils.random(0, 40),
-    frequency: utils.random(0, 12) + " раз в " + utils.randomFromArray(["год", "месяц"]),
+    frequency:
+      utils.random(0, 12) + " раз в " + utils.randomFromArray(["год", "месяц"]),
     last: utils.randomDateInRange(new Date("2023-01-01"), new Date()),
     next: utils.randomDateInRange(new Date("2023-01-01"), new Date()),
     missed: utils.random(0, 10),
   },
-  about: _.times(utils.random(2, 5), () => faker.lorem.words(utils.random(4, 16))),
+  about: _.times(utils.random(2, 5), () =>
+    faker.lorem.words(utils.random(4, 16))
+  ),
   finanses: {
     banace: utils.random(0, 10000),
     average: utils.random(0, 10000),
@@ -133,8 +145,12 @@ const master = masters.map((master) => {
   return {
     ...master,
     phrase: faker.lorem.words(utils.random(2, 7)),
-    about: _.times(utils.random(2, 5), () => faker.lorem.words(utils.random(4, 16))),
-    bests: _.times(utils.random(0, 5), () => faker.lorem.words(utils.random(4, 16))),
+    about: _.times(utils.random(2, 5), () =>
+      faker.lorem.words(utils.random(4, 16))
+    ),
+    bests: _.times(utils.random(0, 5), () =>
+      faker.lorem.words(utils.random(4, 16))
+    ),
     reviews: _.times(utils.random(0, 5), () => faker.lorem.paragraph()),
   };
 });
@@ -150,8 +166,12 @@ const service = _.times(SERVICES, () => {
 
 const services = service.map((s) => ({
   ...s,
-  about: _.times(utils.random(2, 5), () => faker.lorem.words(utils.random(4, 16))),
-  steps: _.times(utils.random(3, 5), () => faker.lorem.words(utils.random(4, 16))),
+  about: _.times(utils.random(2, 5), () =>
+    faker.lorem.words(utils.random(4, 16))
+  ),
+  steps: _.times(utils.random(3, 5), () =>
+    faker.lorem.words(utils.random(4, 16))
+  ),
   reviews: _.times(utils.random(0, 5), () => faker.lorem.paragraph()),
   photos: _.times(utils.random(0, 5), () => faker.image.fashion()),
 }));
@@ -179,7 +199,8 @@ const getCards = (
           const start = fns.setMinutes(fns.setHours(day, START), 0);
           const end = fns.setMinutes(fns.setHours(day, END), 0);
 
-          return utils.timeArrayToSegments(utils.getIntervals(start, end, SEGMENT))
+          return utils
+            .timeArrayToSegments(utils.getIntervals(start, end, SEGMENT))
             .map((seg, index, arr) => {
               const duration = generateCards(arr, index);
               return {
