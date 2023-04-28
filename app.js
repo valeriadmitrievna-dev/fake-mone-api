@@ -1,10 +1,17 @@
 const express = require("express");
 const app = express();
-const fns = require("date-fns");
+const swaggerUi = require("swagger-ui-express");
+const swaggerDocument = require("./swagger.json");
+
+app.use("/api", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+const utils = require("./utils");
+const { faker } = require("@faker-js/faker");
 const cors = require("cors");
 
 const DATA = require("./data");
 const dataHelpers = require("./data-helpers");
+let appointments = require("./appointments");
 
 app.use(cors());
 app.use(express.json());
@@ -14,33 +21,24 @@ app.get("/", (req, res) => {
 });
 
 app.get("/services", (req, res) => {
-  const { q, categories: qCategories, ids } = req.query;
-  const categories = qCategories?.map((c) => +c) || [];
+  const { q: reqQ, categories: reqCategories, ids = [] } = req.query;
+  const categories = reqCategories?.map((c) => +c) || [];
+  const q = reqQ?.toLowerCase() || "";
 
-  if (ids?.length) {
-    const services = DATA.SERVICES.filter(service => ids.includes(service.id));
+  const services = DATA.SERVICES.filter(
+    (service) =>
+      (q.length ? service.title.toLowerCase().startsWith(q) : true) &&
+      (categories.length ? categories.includes(service.category.key) : true) &&
+      (ids.length ? ids.includes(service.id) : true)
+  ).map((service) => ({
+    id: service.id,
+    category: service.category,
+    duration: service.duration,
+    price: service.price,
+    title: service.title,
+  }));
 
-    return res.status(200).json(services);
-  } else {
-    const services = DATA.SERVICES.filter((service) => {
-      const matchTitle = q
-        ? service.title.toLowerCase().startsWith(q.toLowerCase())
-        : true;
-      const matchCategory = !!categories.length
-        ? categories.includes(service.category.key)
-        : true;
-
-      return matchCategory && matchTitle;
-    }).map((service) => ({
-      id: service.id,
-      title: service.title,
-      duration: service.duration,
-      price: service.price,
-      category: service.category,
-    }));
-
-    return res.status(200).json(services);
-  }
+  return res.status(200).json(services);
 });
 
 app.get("/services/:id", (req, res) => {
@@ -120,8 +118,15 @@ app.get("/clients/:id/appointments", (req, res) => {
   const { count = 5 } = req.query;
   if (!id) return res.status(400).json({ error: "Не предоставлен client.id" });
 
-  const appointments = DATA.APPOINTMENTS.filter((a) => a.client.id === id);
-  const result = dataHelpers.getAppointmentsForClient(appointments, count);
+  const client = DATA.CLIENTS.find((s) => s.id === id);
+  if (!client)
+    return res.status(404).json({ error: "Клиент с таким ID не найден" });
+
+  const appointmentsByClient = appointments.filter((a) => a.client.id === id);
+  const result = dataHelpers.getAppointmentsForClient(
+    appointmentsByClient,
+    count
+  );
 
   return res.status(200).json(result);
 });
@@ -208,11 +213,11 @@ app.get("/masters/:id/short", (req, res) => {
     lastname: master.lastname,
     purpose: master.purpose,
     avatar: master.avatar,
+    categories: master.categories,
   });
 });
 
 app.get("/appointments", (req, res) => {
-  const appointments = DATA.APPOINTMENTS;
   return res.status(200).json(appointments);
 });
 
@@ -220,7 +225,7 @@ app.get("/appointments/group", (req, res) => {
   const { masters = [], date = new Date() } = req.query;
 
   const columns = dataHelpers.getAppointmentsForGroup(
-    DATA.APPOINTMENTS,
+    appointments,
     masters,
     new Date(date)
   );
@@ -232,7 +237,7 @@ app.get("/appointments/master", (req, res) => {
   const { master, dates = [] } = req.query;
 
   const columns = dataHelpers.getAppointmentsForDate(
-    DATA.APPOINTMENTS,
+    appointments,
     master,
     dates
   );
@@ -240,33 +245,94 @@ app.get("/appointments/master", (req, res) => {
   return res.status(200).json(columns);
 });
 
-app.put("/appointments/:id/duration", (req, res) => {
+app.get("/appointments/:id", (req, res) => {
   const { id } = req.params;
-  const { date, duration } = req.body;
+  if (!id) return res.status(400).json({ error: "Не предоставлен appointment.id" });
 
-  const appointment = DATA.APPOINTMENTS.find(
-    (appointment) => appointment.id === id
-  );
+  const appointment = appointments.find((a) => a.id === id);
   if (!appointment)
     return res.status(404).json({ error: "Встреча с таким ID не найдена" });
 
-  DATA.APPOINTMENTS = DATA.APPOINTMENTS.map((a) => {
+  return res.status(200).json(appointment);
+});
+
+app.put("/appointments/:id", (req, res) => {
+  const { id } = req.params;
+  const newAppointment = req.body;
+
+  const appointment = appointments.find((appointment) => appointment.id === id);
+  if (!appointment)
+    return res.status(404).json({ error: "Встреча с таким ID не найдена" });
+
+  appointments = appointments.map((a) => {
     if (a.id === id) {
-      return { ...a, duration, date };
+      return { ...a, ...newAppointment };
     }
 
     return a;
   });
 
   return res.status(200).json({
-    previous: appointment.duration,
-    current: duration,
+    previous: appointment,
+    new: newAppointment,
   });
 });
 
 app.post("/appointments", (req, res) => {
-  const appointments = DATA.APPOINTMENTS;
-  return res.status(200).json(appointments);
+  const { client, date, duration, master, services } = req.body;
+
+  if (!client) {
+    return res.status(400).json({
+      error: "Для создания встречи должен быть выбран хотя бы один клиент",
+    });
+  }
+  if (!services?.length) {
+    return res.status(400).json({
+      error: "Для создания встречи должена быть выбрана хотя бы одна услуга",
+    });
+  }
+  if (!master) {
+    return res.status(400).json({
+      error:
+        "Для создания встречи должен быть выбран мастер, оказывающий выбранную(ые) услугу(и)",
+    });
+  }
+  if (!date) {
+    return res
+      .status(400)
+      .json({ error: "Для создания встречи должен быть указана дата приёма" });
+  }
+
+  const checkClient = DATA.CLIENTS.find((c) => c.id === client.id);
+  const checkMaster = DATA.MASTERS.find((m) => m.id === master.id);
+  const checkServices = services.every((s) =>
+    DATA.SERVICES.find((_s) => _s.id === s.id)
+  );
+
+  if (!checkClient) {
+    return res.status(404).json({ error: "Такого клиента не существует" });
+  }
+  if (!checkMaster) {
+    return res.status(404).json({ error: "Такого мастера не существует" });
+  }
+  if (!checkServices) {
+    return res
+      .status(404)
+      .json({ error: "Среди услуг есть минимум одна, которой не существует" });
+  }
+
+  const appointment = {
+    id: faker.datatype.uuid(),
+    client,
+    master,
+    services,
+    duration: duration || utils.getFullDuration(services),
+    date,
+    status: 0,
+  };
+
+  appointments.push(appointment);
+  return res.status(200).json(appointment);
 });
 
 // middlewares

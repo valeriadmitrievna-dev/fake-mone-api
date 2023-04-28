@@ -1,0 +1,1149 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "MONE API"
+  },
+  "paths": {
+    "/services": {
+      "get": {
+        "tags": ["service"],
+        "summary": "Получить массив услуг",
+        "description": "Получить массив услуг по поисковому запросу, категориям, id или без параметров в принципе",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Текст из поля поиска",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "Укладка"
+            }
+          },
+          {
+            "name": "categories",
+            "in": "query",
+            "description": "Массив ключей категорий",
+            "required": false,
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": { "type": "integer" },
+              "example": [1, 3]
+            }
+          },
+          {
+            "name": "ids",
+            "in": "query",
+            "description": "Массив id услуг",
+            "required": false,
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": { "type": "string" },
+              "example": [
+                "4e61f863-63e1-4653-b507-4e581346436f",
+                "af12f9c0-9b63-4ba1-8079-8fe1cc941595"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ShortService"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/services/{id}": {
+      "get": {
+        "tags": ["service"],
+        "summary": "Получить услугу по id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Service"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Не предоставлен service.id"
+          },
+          "404": {
+            "description": "Услуга с таким ID не найдена"
+          }
+        }
+      }
+    },
+    "/services/{id}/short": {
+      "get": {
+        "tags": ["service"],
+        "summary": "Получить короткую запись услуги по id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShortService"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Не предоставлен service.id"
+          },
+          "404": {
+            "description": "Услуга с таким ID не найдена"
+          }
+        }
+      }
+    },
+    "/clients": {
+      "get": {
+        "tags": ["client"],
+        "summary": "Получить массив клиентов",
+        "description": "Получить массив услуг по поисковому запросу или без него",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Текст из поля поиска",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "james"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ShortClient"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clients/{id}": {
+      "get": {
+        "tags": ["client"],
+        "summary": "Получить клиента по id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Client"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Не предоставлен client.id"
+          },
+          "404": {
+            "description": "Клиент с таким ID не найден"
+          }
+        }
+      }
+    },
+    "/clients/{id}/short": {
+      "get": {
+        "tags": ["client"],
+        "summary": "Получить короткую запись клиента по id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShortClient"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Не предоставлен client.id"
+          },
+          "404": {
+            "description": "Клиент с таким ID не найден"
+          }
+        }
+      }
+    },
+    "/clients/{id}/appointments": {
+      "get": {
+        "tags": ["client", "appointment"],
+        "summary": "Получить последний и близжайшие визиты клиента",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+            }
+          },
+          {
+            "name": "count",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 5,
+              "example": 4
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Appointment"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Не предоставлен client.id"
+          },
+          "404": {
+            "description": "Клиент с таким ID не найден"
+          }
+        }
+      }
+    },
+    "/masters": {
+      "get": {
+        "tags": ["master"],
+        "summary": "Получить массив мастеров",
+        "description": "Получить массив мастеров по поисковому запросу, категории, номеру страницы и количеству мастеров на одной странице, или без параметров в принципе",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Текст из поля поиска",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "Укладка"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Ключ категории",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "example": 3
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Номер страницы",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Количество мастеров на одной странице",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "example": 3
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ShortMaster"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/masters/page": {
+      "get": {
+        "tags": ["master"],
+        "summary": "Получить номер страницы мастера",
+        "description": "Получить номер страницы, на которой находится мастер",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "description": "Id мастера",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "dc699016-92ef-41f3-a014-ea9964e721e9"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Количество мастеров на одной странице",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 6
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "example": 4
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Не предоставлен master.id ИЛИ Не предоставлено количество отображаемых колонок"
+          },
+          "404": {
+            "description": "Мастер с таким ID не найден"
+          }
+        }
+      }
+    },
+    "/masters/count": {
+      "get": {
+        "tags": ["master"],
+        "summary": "Получить количество мастеров",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "example": 24
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/masters/{id}": {
+      "get": {
+        "tags": ["master"],
+        "summary": "Получить мастера по id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Master"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Не предоставлен master.id"
+          },
+          "404": {
+            "description": "Мастер с таким ID не найден"
+          }
+        }
+      }
+    },
+    "/masters/{id}/short": {
+      "get": {
+        "tags": ["master"],
+        "summary": "Получить короткую запись мастера по id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShortMaster"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Не предоставлен master.id"
+          },
+          "404": {
+            "description": "Мастер с таким ID не найден"
+          }
+        }
+      }
+    },
+    "/appointments/group": {
+      "get": {
+        "tags": ["appointment"],
+        "summary": "Записи для группы мастеров на конкретный день",
+        "parameters": [
+          {
+            "name": "masters",
+            "in": "query",
+            "description": "Массив id мастеров",
+            "required": true,
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": { "type": "string" },
+              "example": [
+                "4e61f863-63e1-4653-b507-4e581346436f",
+                "af12f9c0-9b63-4ba1-8079-8fe1cc941595",
+                "37c89d8f-e30c-4fc2-9c9a-05da80cf6dd7",
+                "035424a9-9c99-4e93-b88f-049cf68191b3"
+              ]
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "description": "День, на который ищутся записи",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2023-04-28T12:15:50.131Z"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "master": {
+                        "type": "string",
+                        "example": "4e61f863-63e1-4653-b507-4e581346436f"
+                      },
+                      "date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2023-04-28T12:15:50.131Z"
+                      },
+                      "appointments": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Appointment"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appointments/master": {
+      "get": {
+        "tags": ["appointment"],
+        "summary": "Записи для мастера на несколько дней",
+        "parameters": [
+          {
+            "name": "dates",
+            "in": "query",
+            "description": "Массив дат",
+            "required": true,
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": { "type": "string", "format": "date" },
+              "example": [
+                "2023-05-28T12:15:50.131Z",
+                "2023-05-29T12:15:50.131Z",
+                "2023-05-30T12:15:50.131Z",
+                "2023-05-31T12:15:50.131Z"
+              ]
+            }
+          },
+          {
+            "name": "master",
+            "in": "query",
+            "description": "Id мастера",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "d4169cbc-e1d1-4adf-a6e8-ee0f895b30d5"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "master": {
+                        "type": "string",
+                        "example": "4e61f863-63e1-4653-b507-4e581346436f"
+                      },
+                      "date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2023-04-28T12:15:50.131Z"
+                      },
+                      "appointments": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Appointment"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/appointments/{id}": {
+      "get": {
+        "tags": ["appointment"],
+        "summary": "Получить запись по id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Appointment"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Не предоставлен appointment.id"
+          },
+          "404": {
+            "description": "Встреча с таким ID не найдена"
+          }
+        }
+      },
+      "put": {
+        "tags": ["appointment"],
+        "summary": "Изменить запись по id",
+        "description": "Изменить запись по любым полям, передаваемым в body",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Существующая Встреча",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Appointment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "previous": {
+                      "$ref": "#/components/schemas/Appointment"
+                    },
+                    "new": {
+                      "$ref": "#/components/schemas/Appointment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Не предоставлен appointment.id"
+          },
+          "404": {
+            "description": "Встреча с таким ID не найдена"
+          }
+        }
+      }
+    },
+    "/appointments": {
+      "post": {
+        "tags": ["appointment"],
+        "summary": "Создать новую Встречу",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "client": {
+                    "type": "string",
+                    "description": "Id клиента",
+                    "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+                  },
+                  "master": {
+                    "type": "string",
+                    "description": "Id мастера",
+                    "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+                  },
+                  "services": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Массив id услуг",
+                    "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2022-12-24T13:45:00.000Z"
+                  },
+                  "duration": {
+                    "type": "integer",
+                    "description": "Сумма длительностей всех услуг в записи",
+                    "example": 90
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Appointment"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Client": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+          },
+          "avatar": {
+            "type": "string",
+            "nullable": true,
+            "default": null,
+            "example": "https://cloudflare-ipfs.com/ipfs/Qmd3W5DuhgHirLHGVixi6V76LhCkZUz6pnFt5AJBiyvHye/avatar/390.jpg"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+7 (925) 549-94-33"
+          },
+          "email": {
+            "type": "string",
+            "default": null,
+            "example": "Melyssa31@mail.ru"
+          },
+          "firstname": {
+            "type": "string",
+            "example": "Brandi"
+          },
+          "lastname": {
+            "type": "string",
+            "example": "Ferry"
+          },
+          "birth": {
+            "type": "string",
+            "format": "date",
+            "example": "2022-12-24T13:45:00.000Z"
+          },
+          "age": {
+            "type": "integer",
+            "example": 24
+          },
+          "registeredAt": {
+            "type": "string",
+            "format": "date",
+            "example": "2022-12-24T13:45:00.000Z"
+          },
+          "about": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["str1", "str2", "str3"],
+            "default": []
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": [],
+            "example": ["tag1", "tag2", "tag3"]
+          },
+          "sex": {
+            "type": "integer",
+            "example": 1,
+            "minimum": 0,
+            "maximum": 1
+          },
+          "rating": {
+            "type": "integer",
+            "example": 4,
+            "minimum": 0,
+            "maximum": 5,
+            "default": 0
+          },
+          "finanses": {
+            "type": "object",
+            "properties": {
+              "banace": {
+                "type": "integer",
+                "example": 3000,
+                "default": 0
+              },
+              "average": {
+                "type": "integer",
+                "example": 500,
+                "default": 0
+              },
+              "bonus": {
+                "type": "integer",
+                "example": 300,
+                "default": 0
+              },
+              "wasted": {
+                "type": "integer",
+                "example": 6000,
+                "default": 0
+              }
+            }
+          },
+          "appointments": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer",
+                "example": 10
+              },
+              "frequency": {
+                "type": "string",
+                "example": "6 раз в месяц",
+                "description": "Сейчас это статичная строка, как это считать - не представляю"
+              },
+              "last": {
+                "type": "string",
+                "format": "date",
+                "example": "2023-04-28T10:45:00.000Z"
+              },
+              "next": {
+                "type": "string",
+                "format": "date",
+                "example": "2023-05-26T04:30:00.000Z"
+              },
+              "missed": {
+                "type": "integer",
+                "example": 3
+              }
+            },
+            "default": 0
+          }
+        }
+      },
+      "ShortClient": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+          },
+          "avatar": {
+            "type": "string",
+            "nullable": true,
+            "default": null,
+            "example": "https://cloudflare-ipfs.com/ipfs/Qmd3W5DuhgHirLHGVixi6V76LhCkZUz6pnFt5AJBiyvHye/avatar/390.jpg"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+7 (925) 549-94-33"
+          },
+          "firstname": {
+            "type": "string",
+            "example": "Brandi"
+          },
+          "lastname": {
+            "type": "string",
+            "example": "Ferry"
+          }
+        }
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "integer",
+            "example": 3
+          },
+          "title": {
+            "type": "string",
+            "example": "Уход за кожей лица и тела"
+          },
+          "purpose": {
+            "type": "string",
+            "example": "Косметолог"
+          }
+        }
+      },
+      "Service": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+          },
+          "title": {
+            "type": "string",
+            "example": "Укладка"
+          },
+          "duration": {
+            "type": "integer",
+            "example": 45
+          },
+          "price": {
+            "type": "integer",
+            "example": 750
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "about": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["str1", "str2", "str3"],
+            "default": []
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["step 1", "step 2", "step 3"],
+            "default": []
+          },
+          "reviews": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["review 1", "review 2", "review 3"],
+            "default": []
+          }
+        }
+      },
+      "ShortService": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+          },
+          "title": {
+            "type": "string",
+            "example": "Укладка"
+          },
+          "duration": {
+            "type": "integer",
+            "example": 45
+          },
+          "price": {
+            "type": "integer",
+            "example": 750
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          }
+        }
+      },
+      "Master": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+          },
+          "avatar": {
+            "type": "string",
+            "nullable": true,
+            "default": null,
+            "example": "https://cloudflare-ipfs.com/ipfs/Qmd3W5DuhgHirLHGVixi6V76LhCkZUz6pnFt5AJBiyvHye/avatar/390.jpg"
+          },
+          "firstname": {
+            "type": "string",
+            "example": "Brandi"
+          },
+          "lastname": {
+            "type": "string",
+            "example": "Ferry"
+          },
+          "purpose": {
+            "type": "string",
+            "example": "Мастер узкого назначения",
+            "description": "Выбирается на основе категорий. Если категория больше одной, то purpose = Мастер-универсал"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Category"
+            }
+          },
+          "about": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["str1", "str2", "str3"],
+            "default": []
+          },
+          "reviews": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["review 1", "review 2", "review 3"],
+            "default": []
+          },
+          "popular": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShortService"
+            },
+            "description": "Популярные услуги",
+            "default": []
+          }
+        }
+      },
+      "ShortMaster": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+          },
+          "avatar": {
+            "type": "string",
+            "nullable": true,
+            "default": null,
+            "example": "https://cloudflare-ipfs.com/ipfs/Qmd3W5DuhgHirLHGVixi6V76LhCkZUz6pnFt5AJBiyvHye/avatar/390.jpg"
+          },
+          "firstname": {
+            "type": "string",
+            "example": "Brandi"
+          },
+          "lastname": {
+            "type": "string",
+            "example": "Ferry"
+          },
+          "purpose": {
+            "type": "string",
+            "example": "Мастер узкого назначения",
+            "description": "Выбирается на основе категорий. Если категория больше одной, то purpose = Мастер-универсал"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Category"
+            }
+          }
+        }
+      },
+      "Appointment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "36f39f08-3ad2-44a7-b554-031b245c9117"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2023-04-29T13:00:00.000Z"
+          },
+          "duration": {
+            "type": "integer",
+            "example": 90,
+            "description": "Сумма длительностей всех услуг в записи"
+          },
+          "client": {
+            "$ref": "#/components/schemas/ShortClient"
+          },
+          "master": {
+            "$ref": "#/components/schemas/ShortMaster"
+          },
+          "services": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShortService"
+            }
+          },
+          "status": {
+            "type": "integer",
+            "example": 1,
+            "minimum": 0,
+            "maximum": 3,
+            "default": 0
+          }
+        }
+      }
+    }
+  }
+}

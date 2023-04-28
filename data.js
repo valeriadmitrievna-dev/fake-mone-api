@@ -1,7 +1,7 @@
+const fns = require("date-fns");
 const { faker } = require("@faker-js/faker");
 faker.setLocale("ru");
 faker.locale = "ru";
-const fns = require("date-fns");
 
 const utils = require("./utils");
 const dataHelpers = require("./data-helpers");
@@ -36,182 +36,156 @@ const SERVICES = [
   {
     title: "Стрижка",
     category: getCategory(1),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 45,
   },
   {
     title: "Окрашивание",
     category: getCategory(1),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 90,
   },
   {
     title: "Укладка",
     category: getCategory(1),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 60,
   },
   {
     title: "Наращивание волос",
     category: getCategory(1),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 120,
   },
   {
     title: "Маникюр",
     category: getCategory(2),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 90,
   },
   {
     title: "Педикюр",
     category: getCategory(2),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 30,
   },
   {
     title: "Наращивание ногтей",
     category: getCategory(2),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 90,
   },
   {
     title: "Чистка лица",
     category: getCategory(3),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 60,
   },
   {
     title: "Массаж",
     category: getCategory(3),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 30,
   },
   {
     title: "Увлажнение кожи лица",
     category: getCategory(3),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 15,
   },
   {
     title: "Лечение проблемной кожи",
     category: getCategory(3),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 15,
   },
   {
     title: "Солярий",
     category: getCategory(3),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 45,
   },
   {
     title: "Макияж",
     category: getCategory(4),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 30,
   },
   {
     title: "Уход за бровями",
     category: getCategory(4),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 30,
   },
   {
     title: "Уход за ресницами",
     category: getCategory(4),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 30,
   },
   {
     title: "Окрашивание бровей",
     category: getCategory(4),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 45,
   },
   {
     title: "Наращивание ресниц",
     category: getCategory(4),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 120,
   },
   {
     title: "Сауна",
     category: getCategory(5),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 60,
   },
   {
     title: "Баня",
     category: getCategory(5),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 60,
   },
   {
     title: "Гидромассаж",
     category: getCategory(5),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 45,
   },
   {
     title: "Термальные процедуры",
     category: getCategory(5),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 60,
   },
   {
     title: "Татуировка",
     category: getCategory(6),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 60,
   },
   {
     title: "Пирсинг",
     category: getCategory(6),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 15,
   },
   {
     title: "Эпиляция",
     category: getCategory(6),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 45,
   },
   {
     title: "Депиляция",
     category: getCategory(6),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 45,
   },
   {
     title: "Коррекция фигуры",
     category: getCategory(6),
-    master: null,
     id: faker.datatype.uuid(),
     duration: 90,
   },
@@ -231,14 +205,16 @@ const SERVICES = [
 
 const CLIENTS = Array.from(Array(30).keys()).map(() => {
   const tagsCount = utils.random(0, TAGS.length);
+  const firstname = faker.name.firstName();
+  const lastname = faker.name.lastName();
 
   return {
     id: faker.datatype.uuid(),
     avatar: Math.random() > 0.5 ? faker.image.avatar() : null,
     phone: faker.phone.number("+7 (9##) ###-##-##"),
-    firstname: faker.name.firstName(),
-    lastname: faker.name.lastName(),
-    about: Array.from(Array(utils.random(3, 5)).keys()).map(() =>
+    firstname,
+    lastname,
+    about: Array.from(Array(utils.random(0, 3)).keys()).map(() =>
       faker.lorem.words(utils.random(2, 7))
     ),
     finanses: {
@@ -259,6 +235,14 @@ const CLIENTS = Array.from(Array(30).keys()).map(() => {
       fns.subMonths(new Date(), 12),
       new Date()
     ),
+    sex: utils.random(0, 1),
+    birth: utils.randomDateInRange(
+      fns.subYears(new Date(), 60),
+      fns.subYears(new Date(), 16)
+    ),
+    email: faker.internet.email(firstname, lastname),
+    rating: utils.random(0, 5),
+    onlineAccess: utils.random(0, 1),
   };
 });
 
@@ -284,7 +268,7 @@ const MASTERS = Array.from(Array(24).keys()).map(() => {
     categories,
     purpose: categories.length > 1 ? "Мастер-универсал" : categories[0].purpose,
     popular,
-    about: Array.from(Array(utils.random(3, 5)).keys()).map(() =>
+    about: Array.from(Array(utils.random(0, 3)).keys()).map(() =>
       faker.lorem.words(utils.random(2, 7))
     ),
     reviews: Array.from(Array(utils.random(1, 5)).keys()).map(() =>
@@ -318,7 +302,8 @@ const getAppointmentsArray = (day, services, startTime, endTime) => {
     array.push({
       date: new Date(current),
       duration: service.duration,
-      services: [{ ...service, master }],
+      services: [{ ...service }],
+      master,
       client,
       id: faker.datatype.uuid(),
     });
