@@ -16,10 +16,7 @@ module.exports = {
         date,
         master,
         appointments: appointmentsByDate.filter(
-          (appointment) =>
-            !!appointment.services.find(
-              (service) => service.master.id === master
-            )
+          (appointment) => appointment.master.id === master
         ),
       };
     });
@@ -30,8 +27,7 @@ module.exports = {
   // appointments: Appointment[]; master: string; dates: Date[]
   getAppointmentsForDate: (appointments, master, dates) => {
     const appointmentsByMaster = appointments.filter(
-      (appointment) =>
-        !!appointment.services.find((service) => service.master.id === master)
+      (appointment) => appointment.master.id === master
     );
 
     if (!appointmentsByMaster.length) return [];
@@ -55,21 +51,12 @@ module.exports = {
       (a, b) => new Date(a.date) - new Date(b.date)
     );
     const lastAppointment = sortedAppointments
-      .filter((a) => isBefore(a.date, new Date()))
+      .filter((a) => isBefore(new Date(a.date), new Date()))
       .at(-1);
     const appointmentsAfterNow = sortedAppointments
-      .filter((a) => isAfter(a.date, new Date()))
+      .filter((a) => isAfter(new Date(a.date), new Date()))
       .slice(0, count);
 
     return { lastAppointment, appointmentsAfterNow };
   },
-
-  // data:
-  // client: Client;
-  // date: Date;
-  // duration: number;
-  // master: Master;
-  createAppointment: (data) => {
-    
-  }
 };

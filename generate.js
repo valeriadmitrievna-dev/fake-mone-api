@@ -44,7 +44,7 @@ const CATEGORIES = [
   { key: 6, title: "Другие услуги" },
 ];
 
-const generateCards = (arr, index) => {
+const generateAppointmentDuration = (arr, index) => {
   const chance = Math.random();
   let duration;
   const time = Math.abs(
@@ -202,7 +202,7 @@ const getCards = (
           return utils
             .timeArrayToSegments(utils.getIntervals(start, end, SEGMENT))
             .map((seg, index, arr) => {
-              const duration = generateCards(arr, index);
+              const duration = generateAppointmentDuration(arr, index);
               return {
                 date: new Date(seg.start),
                 master,
