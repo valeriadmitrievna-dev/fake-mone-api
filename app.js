@@ -247,7 +247,8 @@ app.get("/appointments/master", (req, res) => {
 
 app.get("/appointments/:id", (req, res) => {
   const { id } = req.params;
-  if (!id) return res.status(400).json({ error: "Не предоставлен appointment.id" });
+  if (!id)
+    return res.status(400).json({ error: "Не предоставлен appointment.id" });
 
   const appointment = appointments.find((a) => a.id === id);
   if (!appointment)
@@ -333,6 +334,10 @@ app.post("/appointments", (req, res) => {
 
   appointments.push(appointment);
   return res.status(200).json(appointment);
+});
+
+app.get("/categories", (req, res) => {
+  res.status(200).json(DATA.CATEGORIES);
 });
 
 // middlewares

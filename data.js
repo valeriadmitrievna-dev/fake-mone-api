@@ -24,7 +24,7 @@ const TAGS = [
 const CATEGORIES = [
   { key: 1, title: "Уход за волосами", purpose: "Парикмахер" },
   { key: 2, title: "Уход за ногтями", purpose: "Маникюрщик" },
-  { key: 3, title: "Уход за кожей лица и тела", purpose: "Косметолог" },
+  { key: 3, title: "Уход за кожей", purpose: "Косметолог" },
   { key: 4, title: "Услуги визажиста", purpose: "Визажист" },
   { key: 5, title: "Спа-услуги", purpose: "Специалист по спа-уходу" },
   { key: 6, title: "Другие услуги", purpose: "Мастер узкого назначения" },
