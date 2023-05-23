@@ -12,7 +12,7 @@ const SEGMENT = 15;
 const START_DATE = fns.subDays(new Date(), Math.round(DAYS / 2));
 const END_DATE = fns.addDays(START_DATE, DAYS - 1);
 
-const generateAppointmentDuration = (arr, index) => {
+const generateCardDuration = (arr, index) => {
   const chance = Math.random();
   let duration;
   const time = Math.abs(
@@ -46,15 +46,15 @@ const generateAppointmentDuration = (arr, index) => {
   return duration;
 };
 
-const generateAppointmentData = (appointment) => {
-  // appointment: date, master, service's duration
+const generateCardData = (card) => {
+  // card: date, master, service's duration
   const fit_15 = DATA.SERVICES.filter((s) => s.duration === 15);
   const card_services = utils.getNRandomsFromArray(fit_15, 1);
   const client = utils.randomFromArray(DATA.CLIENTS);
   const duration = utils.getFullDuration(card_services);
 
   return {
-    ...appointment,
+    ...card,
     services: card_services,
     client,
     id: faker.datatype.uuid(),
@@ -62,7 +62,7 @@ const generateAppointmentData = (appointment) => {
   };
 };
 
-const getAppointments = (
+const getCards = (
   density = 0.5 // 0 - 1
 ) =>
   DATA.MASTERS.map((master) => {
@@ -78,7 +78,7 @@ const getAppointments = (
         return utils
           .timeArrayToSegments(utils.getIntervals(start, end, SEGMENT))
           .map((seg, index, arr) => {
-            const duration = generateAppointmentDuration(arr, index);
+            const duration = generateCardDuration(arr, index);
             return {
               date: new Date(seg.start),
               master,
@@ -93,9 +93,9 @@ const getAppointments = (
       .flat();
   })
     .flat()
-    .map(generateAppointmentData);
+    .map(generateCardData);
 
-module.exports = getAppointments().map((c) => {
+const cards = getCards().map((c) => {
   const sumDuration = c.service.duration;
   const cardServices = [];
 
@@ -137,6 +137,34 @@ module.exports = getAppointments().map((c) => {
     },
     services: cardServices,
     status,
-    duration: utils.getFullDuration(cardServices)
+    duration: utils.getFullDuration(cardServices),
   };
 });
+
+const getAppointments = () => {
+  let appointments = cards.map((card) => ({
+    id: faker.datatype.uuid(),
+    separatable: true,
+    expires: null,
+    cards: [card],
+  }));
+
+  const appointmentsToCombine = utils.getNRandomsFromArray(appointments, 4);
+  const cardsToCombine = appointmentsToCombine.map((a) => a.cards).flat();
+  appointments = appointments.filter(
+    (a) => !appointmentsToCombine.find((ac) => ac.id === a.id)
+  );
+  appointments.push({
+    id: faker.datatype.uuid(),
+    expires: new Date(2023, 5, 1),
+    separatable: false,
+    cards: cardsToCombine,
+  });
+
+  return appointments;
+};
+
+module.exports = {
+  cards,
+  appointments: getAppointments(),
+};

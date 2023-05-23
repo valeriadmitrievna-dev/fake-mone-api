@@ -239,9 +239,9 @@
         }
       }
     },
-    "/clients/{id}/appointments": {
+    "/clients/{id}/cards": {
       "get": {
-        "tags": ["client", "appointment"],
+        "tags": ["client", "card"],
         "summary": "Получить последний и близжайшие визиты клиента",
         "parameters": [
           {
@@ -272,7 +272,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Appointment"
+                    "$ref": "#/components/schemas/Card"
                   }
                 }
               }
@@ -488,9 +488,9 @@
         }
       }
     },
-    "/appointments/group": {
+    "/cards/group": {
       "get": {
-        "tags": ["appointment"],
+        "tags": ["card"],
         "summary": "Записи для группы мастеров на конкретный день",
         "parameters": [
           {
@@ -540,10 +540,10 @@
                         "format": "date",
                         "example": "2023-04-28T12:15:50.131Z"
                       },
-                      "appointments": {
+                      "cards": {
                         "type": "array",
                         "items": {
-                          "$ref": "#/components/schemas/Appointment"
+                          "$ref": "#/components/schemas/Card"
                         }
                       }
                     }
@@ -555,9 +555,9 @@
         }
       }
     },
-    "/appointments/master": {
+    "/cards/master": {
       "get": {
-        "tags": ["appointment"],
+        "tags": ["card"],
         "summary": "Записи для мастера на несколько дней",
         "parameters": [
           {
@@ -607,10 +607,10 @@
                         "format": "date",
                         "example": "2023-04-28T12:15:50.131Z"
                       },
-                      "appointments": {
+                      "cards": {
                         "type": "array",
                         "items": {
-                          "$ref": "#/components/schemas/Appointment"
+                          "$ref": "#/components/schemas/Card"
                         }
                       }
                     }
@@ -622,9 +622,9 @@
         }
       }
     },
-    "/appointments/{id}": {
+    "/cards/{id}": {
       "get": {
-        "tags": ["appointment"],
+        "tags": ["card"],
         "summary": "Получить запись по id",
         "parameters": [
           {
@@ -643,13 +643,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Appointment"
+                  "$ref": "#/components/schemas/Card"
                 }
               }
             }
           },
           "400": {
-            "description": "Не предоставлен appointment.id"
+            "description": "Не предоставлен card.id"
           },
           "404": {
             "description": "Встреча с таким ID не найдена"
@@ -657,7 +657,7 @@
         }
       },
       "put": {
-        "tags": ["appointment"],
+        "tags": ["card"],
         "summary": "Изменить запись по id",
         "description": "Изменить запись по любым полям, передаваемым в body",
         "parameters": [
@@ -676,7 +676,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Appointment"
+                "$ref": "#/components/schemas/Card"
               }
             }
           }
@@ -690,10 +690,10 @@
                   "type": "object",
                   "properties": {
                     "previous": {
-                      "$ref": "#/components/schemas/Appointment"
+                      "$ref": "#/components/schemas/Card"
                     },
                     "new": {
-                      "$ref": "#/components/schemas/Appointment"
+                      "$ref": "#/components/schemas/Card"
                     }
                   }
                 }
@@ -701,7 +701,7 @@
             }
           },
           "400": {
-            "description": "Не предоставлен appointment.id"
+            "description": "Не предоставлен card.id"
           },
           "404": {
             "description": "Встреча с таким ID не найдена"
@@ -709,9 +709,9 @@
         }
       }
     },
-    "/appointments": {
+    "/cards": {
       "post": {
-        "tags": ["appointment"],
+        "tags": ["card"],
         "summary": "Создать новую Встречу",
         "requestBody": {
           "content": {
@@ -758,7 +758,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Appointment"
+                  "$ref": "#/components/schemas/Card"
                 }
               }
             }
@@ -867,7 +867,7 @@
               }
             }
           },
-          "appointments": {
+          "cards": {
             "type": "object",
             "properties": {
               "count": {
@@ -1106,7 +1106,7 @@
           }
         }
       },
-      "Appointment": {
+      "Card": {
         "type": "object",
         "properties": {
           "id": {

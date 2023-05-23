@@ -37,15 +37,15 @@ const toSameDate = (toDate, date) => {
   );
 };
 
-const getFreeTimeRangesGPT = (worktime, appointments, date) => {
-  appointments = appointments.sort(
+const getFreeTimeRangesGPT = (worktime, cards, date) => {
+  cards = cards.sort(
     (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
   );
   const workStart = toSameDate(new Date(worktime.start), date);
   const workEnd = toSameDate(new Date(worktime.end), date);
   const now = fns.isToday(date) ? new Date() : workStart;
 
-  if (!appointments.length) {
+  if (!cards.length) {
     const start = roundToNearestQuarterHour(now);
     const end = workEnd;
 
@@ -64,34 +64,34 @@ const getFreeTimeRangesGPT = (worktime, appointments, date) => {
 
   const freeTimeRanges = [];
 
-  // Iterate through the appointments and find the gaps between them
-  for (let i = 0; i < appointments.length; i++) {
-    const appointmentStart = new Date(appointments[i].start);
-    const appointmentEnd = new Date(appointments[i].end);
+  // Iterate through the cards and find the gaps between them
+  for (let i = 0; i < cards.length; i++) {
+    const cardStart = new Date(cards[i].start);
+    const cardEnd = new Date(cards[i].end);
 
-    // If the appointment ends before the current time, skip it
-    if (appointmentEnd <= now) {
+    // If the card ends before the current time, skip it
+    if (cardEnd <= now) {
       continue;
     }
 
-    // If the appointment starts after the current time, add a free time range before it
-    if (appointmentStart > now) {
+    // If the card starts after the current time, add a free time range before it
+    if (cardStart > now) {
       const start = roundToNearestQuarterHour(new Date(now));
-      const end = new Date(appointmentStart);
+      const end = new Date(cardStart);
 
       if (!isSameTime(start, end)) {
         freeTimeRanges.push({
           start: roundToNearestQuarterHour(new Date(now)),
-          end: new Date(appointmentStart),
+          end: new Date(cardStart),
         });
       }
     }
 
-    // Update the current time to the end of the appointment
-    now.setTime(appointmentEnd.getTime());
+    // Update the current time to the end of the card
+    now.setTime(cardEnd.getTime());
   }
 
-  // If there is free time after the last appointment, add it to the free time ranges
+  // If there is free time after the last card, add it to the free time ranges
   if (now < workEnd) {
     const minutes = getMinutesByInterval({ start: now, end: workEnd });
 
@@ -178,7 +178,7 @@ const getFullDuration = (services) =>
 const getPossibleSegments = (space, duration) => {
   const segments = [];
 
-  // iterate over all possible appointment start times within the time space
+  // iterate over all possible card start times within the time space
   for (
     let i = space.start;
     i <= space.end;
@@ -186,7 +186,7 @@ const getPossibleSegments = (space, duration) => {
   ) {
     const segmentEnd = new Date(i.getTime() + duration * 60 * 1000);
 
-    // if the appointment fits within the current segment, add it to the array
+    // if the card fits within the current segment, add it to the array
     if (segmentEnd <= space.end) {
       segments.push({ start: i, end: segmentEnd });
     }

@@ -4,21 +4,33 @@ faker.setLocale("ru");
 faker.locale = "ru";
 
 const utils = require("./utils");
-const dataHelpers = require("./data-helpers");
-
-const START = 8;
-const END = 17;
-const DAYS = 60;
-
-const START_DATE = fns.subDays(new Date(), 15);
-const END_DATE = fns.addDays(START_DATE, DAYS - 1);
 
 const TAGS = [
-  { title: "Постоянный", color: "#B0BBDB" },
-  { title: "Лояльный", color: "#A8D9E0" },
-  { title: "Красота по-русски", color: "#A0D9F9" },
-  { title: "Бьюти-план", color: "#E4C0BF" },
-  { title: "Приведи друга", color: "#A0D5C9" },
+  {
+    id: faker.datatype.uuid(),
+    title: "Регулярный",
+    color: "#D0DBF0",
+  },
+  {
+    id: faker.datatype.uuid(),
+    title: "Высокий чек",
+    color: "#DFEEE7",
+  },
+  {
+    id: faker.datatype.uuid(),
+    title: "Красота по-русски",
+    color: "#D5C8F5",
+  },
+  {
+    id: faker.datatype.uuid(),
+    title: "Бьюти-план",
+    color: "#FDF6E3",
+  },
+  {
+    id: faker.datatype.uuid(),
+    title: "Приведи друга",
+    color: "#E4CBA7",
+  },
 ];
 
 const CATEGORIES = [
@@ -31,6 +43,62 @@ const CATEGORIES = [
 ];
 
 const getCategory = (n) => CATEGORIES.find((c) => c.key === n) || null;
+
+const CLIENTS = Array.from(Array(30).keys()).map(() => {
+  const tagsCount = utils.random(0, TAGS.length);
+  const firstname = faker.name.firstName();
+  const lastname = faker.name.lastName();
+
+  return {
+    id: faker.datatype.uuid(),
+    avatar: Math.random() > 0.5 ? faker.image.avatar() : null,
+    phone: faker.phone.number("+7 (9##) ###-##-##"),
+    firstname,
+    lastname,
+    about: faker.lorem.text().slice(0, utils.random(0, 200)),
+    tags: utils.shuffleArray(TAGS).slice(0, tagsCount),
+    registeredAt: utils.randomDateInRange(
+      fns.subMonths(new Date(), 12),
+      new Date()
+    ),
+    sex: utils.random(0, 1),
+    birth: utils.randomDateInRange(
+      fns.subYears(new Date(), 60),
+      fns.subYears(new Date(), 16)
+    ),
+    email: faker.internet.email(firstname, lastname),
+    rating: utils.random(0, 5),
+    onlineAccess: utils.random(0, 1),
+  };
+});
+
+const MASTERS = Array.from(Array(24).keys()).map(() => {
+  const categories = [
+    ...new Set(
+      Array.from(Array(utils.random(1, 2)).keys()).map(() =>
+        utils.randomFromArray(CATEGORIES)
+      )
+    ),
+  ];
+
+  return {
+    id: faker.datatype.uuid(),
+    firstname: faker.name.firstName(),
+    lastname: faker.name.lastName(),
+    avatar: Math.random() > 0.5 ? faker.image.avatar() : null,
+    categories,
+    purpose: categories.length > 1 ? "Мастер-универсал" : categories[0].purpose,
+    about: faker.lorem.text().slice(0, utils.random(0, 200)),
+    reviews: {
+      id: faker.datatype.uuid(),
+      date: utils.randomDateInRange(fns.subYears(new Date(), 1), new Date()),
+      from: utils.randomFromArray(CLIENTS).id,
+      body: Array.from(Array(utils.random(1, 5)).keys()).map(() =>
+        faker.lorem.words(utils.random(5, 20))
+      ),
+    },
+  };
+});
 
 const SERVICES = [
   {
@@ -191,154 +259,20 @@ const SERVICES = [
   },
 ].map((service) => ({
   ...service,
-  price: utils.random(300, 5000),
-  about: Array.from(Array(utils.random(3, 5)).keys()).map(() =>
-    faker.lorem.words(utils.random(2, 7))
-  ),
+  price: Math.round(utils.random(300, 5000) / 100) * 100,
+  about: faker.lorem.text().slice(0, utils.random(0, 200)),
   steps: Array.from(Array(utils.random(3, 7)).keys()).map(() =>
     faker.lorem.words(utils.random(2, 7))
   ),
-  reviews: Array.from(Array(utils.random(1, 5)).keys()).map(() =>
-    faker.lorem.words(utils.random(5, 20))
-  ),
-}));
-
-const CLIENTS = Array.from(Array(30).keys()).map(() => {
-  const tagsCount = utils.random(0, TAGS.length);
-  const firstname = faker.name.firstName();
-  const lastname = faker.name.lastName();
-
-  return {
+  reviews: {
     id: faker.datatype.uuid(),
-    avatar: Math.random() > 0.5 ? faker.image.avatar() : null,
-    phone: faker.phone.number("+7 (9##) ###-##-##"),
-    firstname,
-    lastname,
-    about: Array.from(Array(utils.random(0, 3)).keys()).map(() =>
-      faker.lorem.words(utils.random(2, 7))
-    ),
-    finanses: {
-      banace: utils.random(0, 20000),
-      average: utils.random(0, 20000),
-      bonus: utils.random(0, 20000),
-      wasted: utils.random(0, 20000),
-    },
-    appointments: {
-      count: utils.random(0, 50),
-      frequency: utils.random(0, 10),
-      last: utils.randomDateInRange(fns.addDays(new Date(), 30), new Date()),
-      next: utils.randomDateInRange(new Date(), fns.addDays(new Date(), 30)),
-      missed: utils.random(0, 10),
-    },
-    tags: utils.shuffleArray(TAGS.map((tag) => tag.title)).slice(0, tagsCount),
-    registeredAt: utils.randomDateInRange(
-      fns.subMonths(new Date(), 12),
-      new Date()
-    ),
-    sex: utils.random(0, 1),
-    birth: utils.randomDateInRange(
-      fns.subYears(new Date(), 60),
-      fns.subYears(new Date(), 16)
-    ),
-    email: faker.internet.email(firstname, lastname),
-    rating: utils.random(0, 5),
-    onlineAccess: utils.random(0, 1),
-  };
-});
-
-const MASTERS = Array.from(Array(24).keys()).map(() => {
-  const categories = [
-    ...new Set(
-      Array.from(Array(utils.random(1, 2)).keys()).map(() =>
-        utils.randomFromArray(CATEGORIES)
-      )
-    ),
-  ];
-
-  const services = SERVICES.filter((s) =>
-    categories.map((c) => c.key).includes(s.category.key)
-  );
-  const popular = utils.shuffleArray(services).slice(0, utils.random(0, 3));
-
-  return {
-    id: faker.datatype.uuid(),
-    firstname: faker.name.firstName(),
-    lastname: faker.name.lastName(),
-    avatar: Math.random() > 0.5 ? faker.image.avatar() : null,
-    categories,
-    purpose: categories.length > 1 ? "Мастер-универсал" : categories[0].purpose,
-    popular,
-    about: Array.from(Array(utils.random(0, 3)).keys()).map(() =>
-      faker.lorem.words(utils.random(2, 7))
-    ),
-    reviews: Array.from(Array(utils.random(1, 5)).keys()).map(() =>
+    date: utils.randomDateInRange(fns.subYears(new Date(), 1), new Date()),
+    from: utils.randomFromArray(CLIENTS).id,
+    body: Array.from(Array(utils.random(1, 5)).keys()).map(() =>
       faker.lorem.words(utils.random(5, 20))
     ),
-  };
-});
-
-const getAppointmentsArray = (day, services, startTime, endTime) => {
-  const start = new Date(day);
-  start.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
-  const end = new Date(day);
-  end.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0);
-
-  const array = [];
-
-  let current = new Date(start);
-  for (const service of services) {
-    const endOfDuration = new Date(
-      current.getTime() + service.duration * 60 * 1000
-    );
-    if (endOfDuration > end) {
-      break; // no more durations fit in the day
-    }
-
-    const client = utils.randomFromArray(CLIENTS);
-    const master = utils
-      .shuffleArray(MASTERS)
-      .find((m) => m.categories.some((c) => c.key === service.category.key));
-
-    array.push({
-      date: new Date(current),
-      duration: service.duration,
-      services: [{ ...service }],
-      master,
-      client,
-      id: faker.datatype.uuid(),
-    });
-    current = endOfDuration;
-  }
-
-  // calculate free time between durations
-  const freeTimeArray = [];
-  for (let i = 0; i < array.length - 1; i++) {
-    const startOfFreeTime = array[i].end;
-    const endOfFreeTime = array[i + 1].start;
-    const freeDurationInMinutes =
-      (endOfFreeTime - startOfFreeTime) / (1000 * 60);
-    if (freeDurationInMinutes > 0) {
-      freeTimeArray.push({
-        start: startOfFreeTime,
-        end: endOfFreeTime,
-        duration: freeDurationInMinutes,
-      });
-    }
-  }
-
-  return array;
-};
-
-const startTime = fns.setMinutes(fns.setHours(new Date(), START), 0);
-const endTime = fns.setMinutes(fns.setHours(new Date(), END), 0);
-
-const APPOINTMENTS = fns
-  .eachDayOfInterval({
-    start: START_DATE,
-    end: END_DATE,
-  })
-  .map((day) => getAppointmentsArray(day, SERVICES, startTime, endTime))
-  .flat();
+  },
+}));
 
 module.exports = {
   SERVICES,
@@ -346,5 +280,4 @@ module.exports = {
   TAGS,
   CATEGORIES,
   MASTERS,
-  APPOINTMENTS,
 };

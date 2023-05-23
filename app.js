@@ -11,7 +11,8 @@ const cors = require("cors");
 
 const DATA = require("./data");
 const dataHelpers = require("./data-helpers");
-let appointments = require("./appointments");
+let { cards, appointments } = require("./cards");
+const { isBefore } = require("date-fns");
 
 app.use(cors());
 app.use(express.json());
@@ -39,6 +40,26 @@ app.get("/services", (req, res) => {
   }));
 
   return res.status(200).json(services);
+});
+
+app.get("/services/client", (req, res) => {
+  try {
+    const { id, limit = 4, page = 1 } = req.query;
+
+    const client = DATA.CLIENTS.find((c) => c.id === id);
+    if (!client) return res.status(404).json({ error: "Invalid client id" });
+
+    const services = cards
+      .filter((c) => c.client.id === id)
+      .map((card) => card.services)
+      .flat();
+    const pages = Math.ceil(services.length / limit);
+    const slice = services.slice((page - 1) * limit, page * limit);
+
+    return res.status(200).json({ pages, services: slice });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 });
 
 app.get("/services/:id", (req, res) => {
@@ -113,7 +134,7 @@ app.get("/clients/:id/short", (req, res) => {
   });
 });
 
-app.get("/clients/:id/appointments", (req, res) => {
+app.get("/clients/:id/cards", (req, res) => {
   const { id } = req.params;
   const { count = 5 } = req.query;
   if (!id) return res.status(400).json({ error: "Не предоставлен client.id" });
@@ -122,11 +143,8 @@ app.get("/clients/:id/appointments", (req, res) => {
   if (!client)
     return res.status(404).json({ error: "Клиент с таким ID не найден" });
 
-  const appointmentsByClient = appointments.filter((a) => a.client.id === id);
-  const result = dataHelpers.getAppointmentsForClient(
-    appointmentsByClient,
-    count
-  );
+  const cardsByClient = cards.filter((a) => a.client.id === id);
+  const result = dataHelpers.getCardsForClient(cardsByClient, count);
 
   return res.status(200).json(result);
 });
@@ -217,69 +235,77 @@ app.get("/masters/:id/short", (req, res) => {
   });
 });
 
-app.get("/appointments", (req, res) => {
-  return res.status(200).json(appointments);
+app.get("/cards", (req, res) => {
+  return res.status(200).json(cards);
 });
 
-app.get("/appointments/group", (req, res) => {
+app.get("/cards/group", (req, res) => {
   const { masters = [], date = new Date() } = req.query;
 
-  const columns = dataHelpers.getAppointmentsForGroup(
-    appointments,
-    masters,
-    new Date(date)
-  );
+  const columns = dataHelpers.getCardsForGroup(cards, masters, new Date(date));
 
   return res.status(200).json(columns);
 });
 
-app.get("/appointments/master", (req, res) => {
+app.get("/cards/client", (req, res) => {
+  try {
+    const { id, limit = 4, page = 1 } = req.query;
+
+    const client = DATA.CLIENTS.find((c) => c.id === id);
+    if (!client) return res.status(404).json({ error: "Invalid client id" });
+
+    const _cards = cards.filter((c) => c.client.id === id);
+    const pages = Math.ceil(_cards.length / limit);
+    const slice = _cards.slice((page - 1) * limit, page * limit);
+
+    return res.status(200).json({ pages, cards: slice });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/cards/master", (req, res) => {
   const { master, dates = [] } = req.query;
 
-  const columns = dataHelpers.getAppointmentsForDate(
-    appointments,
-    master,
-    dates
-  );
+  const columns = dataHelpers.getCardsForDate(cards, master, dates);
 
   return res.status(200).json(columns);
 });
 
-app.get("/appointments/:id", (req, res) => {
+app.get("/cards/:id", (req, res) => {
   const { id } = req.params;
-  if (!id)
-    return res.status(400).json({ error: "Не предоставлен appointment.id" });
+  if (!id) return res.status(400).json({ error: "Не предоставлен card.id" });
 
-  const appointment = appointments.find((a) => a.id === id);
-  if (!appointment)
+  const card = cards.find((a) => a.id === id);
+  if (!card)
     return res.status(404).json({ error: "Встреча с таким ID не найдена" });
 
-  return res.status(200).json(appointment);
+  return res.status(200).json(card);
 });
 
-app.put("/appointments/:id", (req, res) => {
+app.put("/cards/:id", (req, res) => {
   const { id } = req.params;
-  const newAppointment = req.body;
+  const newCard = req.body;
 
-  const appointment = appointments.find((appointment) => appointment.id === id);
-  if (!appointment)
+  const card = cards.find((card) => card.id === id);
+  if (!card)
     return res.status(404).json({ error: "Встреча с таким ID не найдена" });
 
-  appointments = appointments.map((a) => {
+  cards = cards.map((a) => {
     if (a.id === id) {
-      return { ...a, ...newAppointment };
+      return { ...a, ...newCard };
     }
 
     return a;
   });
 
   return res.status(200).json({
-    previous: appointment,
-    new: newAppointment,
+    previous: card,
+    new: newCard,
   });
 });
 
-app.post("/appointments", (req, res) => {
+app.post("/cards", (req, res) => {
   const { client, date, duration, master, services } = req.body;
 
   if (!client) {
@@ -322,7 +348,7 @@ app.post("/appointments", (req, res) => {
       .json({ error: "Среди услуг есть минимум одна, которой не существует" });
   }
 
-  const appointment = {
+  const card = {
     id: faker.datatype.uuid(),
     client,
     master,
@@ -332,12 +358,49 @@ app.post("/appointments", (req, res) => {
     status: 0,
   };
 
-  appointments.push(appointment);
-  return res.status(200).json(appointment);
+  cards.push(card);
+  return res.status(200).json(card);
 });
 
 app.get("/categories", (req, res) => {
   res.status(200).json(DATA.CATEGORIES);
+});
+
+app.get("/tags", (req, res) => {
+  res.status(200).json(DATA.TAGS);
+});
+
+app.get("/appointments", (req, res) => {
+  return res.status(200).json(appointments);
+});
+
+app.get("/appointments/:id", (req, res) => {
+  const { id } = req.params;
+  if (!id)
+    return res.status(400).json({ error: "Не предоставлен appointment.id" });
+
+  const appointment = appointments.find((s) => s.id === id);
+  if (!appointment)
+    return res
+      .status(404)
+      .json({ error: "Группа встреч с таким ID не найдена" });
+
+  return res.status(200).json(appointment);
+});
+
+app.get("/appointments/byCard/:id", (req, res) => {
+  const { id } = req.params;
+  if (!id) return res.status(400).json({ error: "Не предоставлен card.id" });
+
+  const appointment = appointments.find(
+    (appointment) => !!appointment.cards.find((card) => card.id === id)
+  );
+  if (!appointment)
+    return res
+      .status(404)
+      .json({ error: "Не найдена группа встреч с такой записью в ней" });
+
+  return res.status(200).json(appointment);
 });
 
 // middlewares

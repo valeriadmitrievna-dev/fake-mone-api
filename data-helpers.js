@@ -3,41 +3,35 @@ const { faker } = require("@faker-js/faker");
 const DATA = require("./data");
 
 module.exports = {
-  // appointments: Appointment[]; masters: string[]; date: Date
-  getAppointmentsForGroup: (appointments, masters, date) => {
-    const appointmentsByDate = appointments.filter((a) =>
-      isSameDay(new Date(a.date), date)
-    );
+  // cards: Card[]; masters: string[]; date: Date
+  getCardsForGroup: (cards, masters, date) => {
+    const cardsByDate = cards.filter((a) => isSameDay(new Date(a.date), date));
 
-    if (!appointmentsByDate.length) return [];
+    if (!cardsByDate.length) return [];
 
     const groupedByMasters = masters.map((master) => {
       return {
         date,
         master,
-        appointments: appointmentsByDate.filter(
-          (appointment) => appointment.master.id === master
-        ),
+        cards: cardsByDate.filter((card) => card.master.id === master),
       };
     });
 
     return groupedByMasters;
   },
 
-  // appointments: Appointment[]; master: string; dates: Date[]
-  getAppointmentsForDate: (appointments, master, dates) => {
-    const appointmentsByMaster = appointments.filter(
-      (appointment) => appointment.master.id === master
-    );
+  // cards: Card[]; master: string; dates: Date[]
+  getCardsForDate: (cards, master, dates) => {
+    const cardsByMaster = cards.filter((card) => card.master.id === master);
 
-    if (!appointmentsByMaster.length) return [];
+    if (!cardsByMaster.length) return [];
 
     const groupedByMasters = dates.map((date) => {
       return {
         date,
         master,
-        appointments: appointmentsByMaster.filter((appointment) =>
-          isSameDay(new Date(appointment.date), new Date(date))
+        cards: cardsByMaster.filter((card) =>
+          isSameDay(new Date(card.date), new Date(date))
         ),
       };
     });
@@ -45,18 +39,18 @@ module.exports = {
     return groupedByMasters;
   },
 
-  // appointments: Appointment[]; count: number
-  getAppointmentsForClient: (appointments, count) => {
-    const sortedAppointments = appointments.sort(
+  // cards: Card[]; count: number
+  getCardsForClient: (cards, count) => {
+    const sortedCards = cards.sort(
       (a, b) => new Date(a.date) - new Date(b.date)
     );
-    const lastAppointment = sortedAppointments
+    const last = sortedCards
       .filter((a) => isBefore(new Date(a.date), new Date()))
       .at(-1);
-    const appointmentsAfterNow = sortedAppointments
+    const upcoming = sortedCards
       .filter((a) => isAfter(new Date(a.date), new Date()))
       .slice(0, count);
 
-    return { lastAppointment, appointmentsAfterNow };
+    return { last, upcoming };
   },
 };
